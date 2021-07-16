@@ -1,6 +1,8 @@
+import { Res } from '@nestjs/common';
 import { Controller, Get, Redirect, Req, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { GithubAuthGuard } from './github-atuh.guard';
+import { GithubAuthGuard } from './githubOauth/github-auth.guard';
+import { JwtAuthGuard } from './jwt/jwt-auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -8,20 +10,20 @@ export class AuthController {
 
   @Get()
   @UseGuards(GithubAuthGuard)
-  async githubAuth(@Req() req) {}
+  async githubAuth(@Req() req) {
+    return null;
+  }
 
+  // @Redirect('http://localhost:3000/')
   @Get('redirect')
   @UseGuards(GithubAuthGuard)
-  @Redirect('http://localhost:3000/')
   githubAuthRedirect(@Req() req) {
-    console.log('githutAuthRedirect');
-    console.log(req.user);
-    if (!this.authService.githubLogin(req)) {
-      return { url: 'http://localhost:3000/fail' };
-    } else {
-      return {
-        url: `http://localhost:3000?${this.authService.githubLogin(req).jwt}`,
-      };
-    }
+    return this.authService.githubLogin(req);
+  }
+
+  @Get('jwt')
+  @UseGuards(JwtAuthGuard)
+  jwtTest(@Req() req) {
+    return { user: req.user };
   }
 }
