@@ -1,7 +1,29 @@
-import { InputType, Int, Field } from '@nestjs/graphql';
+import {
+  ArgsType,
+  Int,
+  Field,
+  InputType,
+  ObjectType,
+  PickType,
+} from '@nestjs/graphql';
+import { IsBoolean, IsString, Length } from 'class-validator';
+import { CoreOutput } from 'src/common/dtos/output.dto';
+import { Room } from '../entities/room.entity';
 
 @InputType()
-export class CreateRoomInput {
-  @Field(() => Int, { description: 'Example field (placeholder)' })
-  exampleField: number;
+export class CreateRoomInput extends PickType(Room, [
+  'name',
+  'description',
+  'isSecret',
+  'isCanSearched',
+  'password',
+]) {
+  @Field(() => [String])
+  tagNames: string[];
+}
+
+@ObjectType()
+export class CreateRoomOutput extends CoreOutput {
+  @Field((type) => Int)
+  roomId?: number;
 }

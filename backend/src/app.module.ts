@@ -1,17 +1,15 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import * as Joi from 'joi';
 import { User } from './users/entities/user.entity';
 import { GraphQLModule } from '@nestjs/graphql';
-import { JwtModule } from '@nestjs/jwt';
 import { CommonModule } from './common/common.module';
 import { RoomsModule } from './rooms/rooms.module';
 import { Room } from './rooms/entities/room.entity';
+import { Tag } from './rooms/entities/tag.entity';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -49,7 +47,7 @@ import { Room } from './rooms/entities/room.entity';
       database: process.env.DB_NAME,
       synchronize: process.env.NODE_ENV !== 'prod', // TypeOrm의 Entity에 맞춰 실제 DB에 Migration
       logging: process.env.NODE_ENV !== 'prod',
-      entities: [User, Room],
+      entities: [User, Room, Tag],
     }),
     GraphQLModule.forRoot({
       // installSubscriptionHandlers: true, // NOTE ws 활성화
