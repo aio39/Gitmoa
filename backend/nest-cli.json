@@ -1,4 +1,30 @@
 {
   "collection": "@nestjs/schematics",
-  "sourceRoot": "src"
+  "sourceRoot": "apps/gitmoa/src",
+  "monorepo": true,
+  "root": "apps/gitmoa",
+  "compilerOptions": {
+    "webpack": true,
+    "tsConfigPath": "apps/gitmoa/tsconfig.app.json"
+  },
+  "projects": {
+    "gitmoa": {
+      "type": "application",
+      "root": "apps/gitmoa",
+      "entryFile": "main",
+      "sourceRoot": "apps/gitmoa/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/gitmoa/tsconfig.app.json"
+      }
+    },
+    "sl-user-sync": {
+      "type": "application",
+      "root": "apps/sl-user-sync",
+      "entryFile": "main",
+      "sourceRoot": "apps/sl-user-sync/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/sl-user-sync/tsconfig.app.json"
+      }
+    }
+  }
 }
