@@ -10,7 +10,7 @@ import {
   ParticipateRoomOutput,
 } from './dto/participate-room.dto';
 import { DeleteRoomInput, DeleteRoomOutput } from './dto/delete-room.dto';
-import { AllowedRoles, Roles } from 'src/auth/roles.decorator';
+import { AllowedRoles, Roles } from 'src/auth/auth-decorator/roles.decorator';
 
 @Resolver(() => Room)
 export class RoomsResolver {
