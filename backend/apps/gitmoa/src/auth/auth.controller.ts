@@ -9,7 +9,7 @@ export class AuthController {
 
   @Get()
   @UseGuards(GithubAuthGuard)
-  async githubAuth(@Req() req) {
+  async githubAuth() {
     return null;
   }
 

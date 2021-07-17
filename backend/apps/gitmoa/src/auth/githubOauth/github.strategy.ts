@@ -1,12 +1,10 @@
 import { Strategy } from 'passport-github2';
 import { PassportStrategy } from '@nestjs/passport';
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { AuthService } from '../auth.service';
-import { ConfigService } from '@nestjs/config';
-import { config } from 'dotenv';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { User } from '../../users/entities/user.entity';
+import { User } from '@lib/entity';
 
 @Injectable()
 export class GithubStrategy extends PassportStrategy(Strategy) {

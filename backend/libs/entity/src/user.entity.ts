@@ -7,7 +7,7 @@ import {
   PrimaryColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { Room } from '../../rooms/entities/room.entity';
+import { Room } from './room.entity';
 
 // @InputType('UserInputType', { isAbstract: true })
 @Entity({ name: 'user' })

@@ -4,12 +4,10 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import * as Joi from 'joi';
-import { User } from './users/entities/user.entity';
 import { GraphQLModule } from '@nestjs/graphql';
 import { CommonModule } from './common/common.module';
 import { RoomsModule } from './rooms/rooms.module';
-import { Room } from './rooms/entities/room.entity';
-import { Tag } from './rooms/entities/tag.entity';
+import { User, Tag, Room } from '@lib/entity';
 @Module({
   imports: [
     ConfigModule.forRoot({

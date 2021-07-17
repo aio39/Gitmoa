@@ -1,7 +1,7 @@
 import { Field, InputType, Int, ObjectType } from '@nestjs/graphql';
 import { IsBoolean, IsOptional, IsString, Length } from 'class-validator';
 import { Column, Entity, JoinTable, ManyToMany, OneToMany } from 'typeorm';
-import { CoreEntity } from '../../common/entities/core.entity';
+import { CoreEntity } from './core.entity';
 import { Room } from './room.entity';
 
 @InputType('TagInputType', { isAbstract: true })

@@ -1,6 +1,6 @@
+import { Room } from '@lib/entity';
 import { Field, InputType, ObjectType, PickType } from '@nestjs/graphql';
-import { CoreOutput } from '../../common/dtos/output.dto';
-import { Room } from '../entities/room.entity';
+import { CoreOutput } from 'apps/gitmoa/src/common/dtos/output.dto';
 
 @InputType()
 export class FindRoomByIdInput extends PickType(Room, ['id']) {}

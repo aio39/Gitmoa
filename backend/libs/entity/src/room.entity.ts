@@ -9,9 +9,9 @@ import {
   ManyToOne,
   RelationId,
 } from 'typeorm';
-import { CoreEntity } from '../../common/entities/core.entity';
-import { User } from '../../users/entities/user.entity';
+import { CoreEntity } from './core.entity';
 import { Tag } from './tag.entity';
+import { User } from './user.entity';
 
 @InputType('RoomInputType', { isAbstract: true })
 @Entity({ name: 'room' })

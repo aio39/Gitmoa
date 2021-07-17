@@ -1,9 +1,8 @@
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PassportStrategy } from '@nestjs/passport';
 import { Injectable } from '@nestjs/common';
-import { config } from 'dotenv';
 import { ConfigService } from '@nestjs/config';
-import { User } from '../../users/entities/user.entity';
+import { User } from '@lib/entity';
 
 interface JWTPayload {
   id: User['id'];

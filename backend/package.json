@@ -100,8 +100,8 @@
       "<rootDir>/libs/"
     ],
     "moduleNameMapper": {
-      "@entity/entity/(.*)": "<rootDir>/libs/entity/src/$1",
-      "@entity/entity": "<rootDir>/libs/entity/src"
+      "@lib/entity/(.*)": "<rootDir>/libs/entity/src/$1",
+      "@lib/entity": "<rootDir>/libs/entity/src"
     }
   }
 }

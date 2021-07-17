@@ -1,17 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { find } from 'rxjs';
 import { Repository } from 'typeorm';
-import { User } from '../users/entities/user.entity';
 import { CreateRoomInput } from './dto/create-room.input';
 import { DeleteRoomOutput } from './dto/delete-room.dto';
 import { FindRoomByIdOutput } from './dto/find-room-by-id.dto';
 import { ParticipateRoomOutput } from './dto/participate-room.dto';
-import { UpdateRoomInput } from './dto/update-room.input';
-import { Room } from './entities/room.entity';
-import { Tag } from './entities/tag.entity';
-import { TagRepository } from './repositories/tag.repository';
-
+import { User, TagRepository, Room } from '@lib/entity';
 @Injectable()
 export class RoomsService {
   constructor(

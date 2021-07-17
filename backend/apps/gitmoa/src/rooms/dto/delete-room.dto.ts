@@ -1,10 +1,9 @@
-import { Field, InputType, ObjectType, PickType } from '@nestjs/graphql';
-import { CoreOutput } from '../../common/dtos/output.dto';
-import { Room } from '../entities/room.entity';
+import { Field, InputType, ObjectType } from '@nestjs/graphql';
+import { CoreOutput } from 'apps/gitmoa/src/common/dtos/output.dto';
 
 @InputType()
 export class DeleteRoomInput {
-  @Field((type) => Number)
+  @Field(() => Number)
   id: number;
 }
 

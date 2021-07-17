@@ -1,17 +1,16 @@
-import { Resolver, Query, Mutation, Args, Int } from '@nestjs/graphql';
+import { Resolver, Mutation, Args } from '@nestjs/graphql';
 import { RoomsService } from './rooms.service';
-import { Room } from './entities/room.entity';
+// import { Room } from './entities/room.entity';
 import { CreateRoomInput, CreateRoomOutput } from './dto/create-room.input';
-import { UpdateRoomInput } from './dto/update-room.input';
 import {
   ParticipateRoomInput,
   ParticipateRoomOutput,
 } from './dto/participate-room.dto';
 import { DeleteRoomInput, DeleteRoomOutput } from './dto/delete-room.dto';
 import { AuthUser } from '../auth/auth-decorator/auth-user.decorator';
-import { User } from '../users/entities/user.entity';
+// import { User } from '../users/entities/user.entity';
 import { AllowedRoles, Roles } from '../auth/auth-decorator/roles.decorator';
-
+import { User, Room } from '@lib/entity';
 @Resolver(() => Room)
 export class RoomsResolver {
   constructor(private readonly roomsService: RoomsService) {}

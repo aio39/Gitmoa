@@ -1,14 +1,6 @@
-import {
-  ArgsType,
-  Int,
-  Field,
-  InputType,
-  ObjectType,
-  PickType,
-} from '@nestjs/graphql';
-import { IsBoolean, IsString, Length } from 'class-validator';
-import { CoreOutput } from '../../common/dtos/output.dto';
-import { Room } from '../entities/room.entity';
+import { Room } from '@lib/entity';
+import { Int, Field, InputType, ObjectType, PickType } from '@nestjs/graphql';
+import { CoreOutput } from 'apps/gitmoa/src/common/dtos/output.dto';
 
 @InputType()
 export class CreateRoomInput extends PickType(Room, [
@@ -24,6 +16,6 @@ export class CreateRoomInput extends PickType(Room, [
 
 @ObjectType()
 export class CreateRoomOutput extends CoreOutput {
-  @Field((type) => Int)
+  @Field(() => Int)
   roomId?: number;
 }

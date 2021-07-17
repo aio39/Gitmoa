@@ -2,9 +2,9 @@ import { Module } from '@nestjs/common';
 import { RoomsService } from './rooms.service';
 import { RoomsResolver } from './rooms.resolver';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Room } from './entities/room.entity';
-import { TagRepository } from './repositories/tag.repository';
-import { User } from '../users/entities/user.entity';
+// import { Room } from './entities/room.entity';
+// import { TagRepository } from './repositories/tag.repository';
+import { User, TagRepository, Room } from '@lib/entity';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Room, TagRepository, User])],

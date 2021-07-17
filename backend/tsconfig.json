@@ -12,10 +12,10 @@
     "baseUrl": "./",
     "incremental": true,
     "paths": {
-      "@entity/entity": [
+      "@lib/entity": [
         "libs/entity/src"
       ],
-      "@entity/entity/*": [
+      "@lib/entity/*": [
         "libs/entity/src/*"
       ]
     }
