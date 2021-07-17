@@ -5,7 +5,11 @@
   "root": "apps/gitmoa",
   "compilerOptions": {
     "webpack": true,
-    "tsConfigPath": "apps/gitmoa/tsconfig.app.json"
+    "tsConfigPath": "apps/gitmoa/tsconfig.app.json",
+    "deleteOutDir": true
+  },
+  "generateOptions": {
+    "spec": false
   },
   "projects": {
     "gitmoa": {
@@ -24,6 +28,15 @@
       "sourceRoot": "apps/sl-user-sync/src",
       "compilerOptions": {
         "tsConfigPath": "apps/sl-user-sync/tsconfig.app.json"
+      }
+    },
+    "entity": {
+      "type": "library",
+      "root": "libs/entity",
+      "entryFile": "index",
+      "sourceRoot": "libs/entity/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/entity/tsconfig.lib.json"
       }
     }
   }
