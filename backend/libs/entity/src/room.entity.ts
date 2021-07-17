@@ -1,4 +1,4 @@
-import { ObjectType, Field, Int, InputType } from '@nestjs/graphql';
+import { ObjectType, Field, InputType } from '@nestjs/graphql';
 import { IsBoolean, IsOptional, IsString, Length } from 'class-validator';
 import { nanoid } from 'nanoid';
 import {
@@ -49,7 +49,7 @@ export class Room extends CoreEntity {
   @Field(() => String)
   secretLink: string;
 
-  @ManyToOne((type) => User, { onDelete: 'SET NULL' })
+  @ManyToOne(() => User, { onDelete: 'SET NULL' })
   @Field(() => User)
   creator: User;
 

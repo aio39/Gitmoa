@@ -1,6 +1,6 @@
-import { Field, InputType, Int, ObjectType } from '@nestjs/graphql';
-import { IsBoolean, IsOptional, IsString, Length } from 'class-validator';
-import { Column, Entity, JoinTable, ManyToMany, OneToMany } from 'typeorm';
+import { Field, InputType, ObjectType } from '@nestjs/graphql';
+import { IsString, Length } from 'class-validator';
+import { Column, Entity, ManyToMany } from 'typeorm';
 import { CoreEntity } from './core.entity';
 import { Room } from './room.entity';
 
@@ -9,17 +9,17 @@ import { Room } from './room.entity';
 @Entity()
 export class Tag extends CoreEntity {
   @Column({ unique: true })
-  @Field((type) => String)
+  @Field(() => String)
   @IsString()
   @Length(5)
   name: string;
 
   @Column({ nullable: true })
-  @Field((type) => String, { nullable: true })
+  @Field(() => String, { nullable: true })
   @IsString()
   icon: string;
 
-  @Field((type) => String)
+  @Field(() => String)
   @Column({ unique: true })
   @IsString()
   slug: string;

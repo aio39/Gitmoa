@@ -1,4 +1,4 @@
-import { ObjectType, Field, Int, InputType } from '@nestjs/graphql';
+import { ObjectType, Field, InputType } from '@nestjs/graphql';
 import {
   Column,
   CreateDateColumn,
@@ -9,20 +9,20 @@ import {
 } from 'typeorm';
 import { Room } from './room.entity';
 
-// @InputType('UserInputType', { isAbstract: true })
+@InputType('UserInputType', { isAbstract: true })
 @Entity({ name: 'user' })
 @ObjectType()
 export class User {
   @PrimaryColumn()
-  @Field((type) => Number)
+  @Field(() => Number)
   id: number;
 
   @CreateDateColumn()
-  @Field((type) => Date)
+  @Field(() => Date)
   createdAt: Date;
 
   @UpdateDateColumn()
-  @Field((type) => Date)
+  @Field(() => Date)
   updatedAt: Date;
 
   @Column({ nullable: false })
