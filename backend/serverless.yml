@@ -1,0 +1,35 @@
+service:
+  name: gitmoa
+
+plugins:
+  - serverless-offline
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+
+
+package:
+  individually: true
+  exclude:
+    - '**/*'
+  include:
+    - dist/apps/sl-user-sync/**
+
+functions:
+  main:
+    handler: dist/apps/sl-user-sync/main.handlerA
+    events:
+      - http:
+          method: ANY
+          path: /funcA
+      # - http:
+      #     method: ANY
+      #     path: '{proxy+}'
+  main2:
+    handler: dist/apps/sl-user-sync/main.handlerB
+    events:
+      - http:
+          method: ANY
+          path: /funcB
+    
