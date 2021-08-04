@@ -1,80 +1,119 @@
+import {
+  Avatar,
+  Button,
+  Card,
+  CardActionArea,
+  CardActions,
+  CardContent,
+  Chip,
+  Grid,
+  makeStyles,
+  Typography,
+} from '@material-ui/core'
 import Layout from '../components/layout'
 
+const useStyles = makeStyles({
+  roomCard: {
+    width: '100%',
+  },
+  title: {
+    fontSize: 14,
+  },
+  pos: {
+    marginBottom: 12,
+  },
+})
+
+const roomList = Array(20)
+  .fill(0)
+  .map((_, idx) => ({
+    roomNum: 101,
+    name: '방이름.' + idx,
+    creatorId: 'aio',
+    creatorAvatar: 'https://avatars.githubusercontent.com/u/68348070?v=4',
+    description: '설명설명',
+    isSecret: true,
+    max: 40,
+    count: 20,
+    tags: [
+      { name: 'tech', icon: '/icon/tech.svg' },
+      { name: 'javascript', icon: '/icon/javascript.png' },
+      { name: 'rust', icon: '/icon/rust.png' },
+      { name: 'python', icon: '/icon/python.png' },
+      { name: 'typescript', icon: '/icon/typescript.png' },
+      // { name: 'rust', icon: '/icon/rust.png' },
+      // { name: 'python', icon: '/icon/python.png' },
+      // { name: 'typescript', icon: '/icon/typescript.png' },
+      // { name: 'rust', icon: '/icon/rust.png' },
+      // { name: 'python', icon: '/icon/python.png' },
+      // { name: 'typescript', icon: '/icon/typescript.png' },
+    ],
+  }))
+
 export default function Rooms() {
-  const roomList = Array(20)
-    .fill(0)
-    .map((_) => ({
-      roomNum: 101,
-      name: '방이름.',
-      creatorId: 'aio',
-      creatorAvatar: 'https://avatars.githubusercontent.com/u/68348070?v=4',
-      description: '설명설명',
-      isSecret: true,
-      max: 40,
-      count: 20,
-      tags: [
-        { name: 'tech', icon: '/icon/tech.svg' },
-        { name: 'javascript', icon: '/icon/javascript.png' },
-        { name: 'rust', icon: '/icon/rust.png' },
-        { name: 'python', icon: '/icon/python.png' },
-        { name: 'typescript', icon: '/icon/typescript.png' },
-        // { name: 'rust', icon: '/icon/rust.png' },
-        // { name: 'python', icon: '/icon/python.png' },
-        // { name: 'typescript', icon: '/icon/typescript.png' },
-        // { name: 'rust', icon: '/icon/rust.png' },
-        // { name: 'python', icon: '/icon/python.png' },
-        // { name: 'typescript', icon: '/icon/typescript.png' },
-      ],
-    }))
+  const classes = useStyles()
   return (
     <Layout>
-      <h1 className="text-4xl mb-8">Room</h1>
-      <div className="flex flex-wrap justify-center  gap-x-4  gap-y-4 min-w-full">
-        {roomList.map((room, inx) => (
-          <div
-            key={`${inx}`}
-            className="relative group w-60 h-60  border-2  flex-grow shadow-md p-4 rounded-lg hover:border-green-600"
-          >
-            {/* <div className="absolute z-10 -bottom-20 bg-gray-600 min-w-full h-0 group-hover:h-20 hidden group-hover:block group-hover: group-hover:bg-indigo-400 "></div> */}
-            <div className="inline-flex relative h-full flex-col ">
-              {room.isSecret && (
-                <div className="absolute -right-1 -top-1">🔒</div>
-              )}
-              <h2 className="truncate">{room.name}</h2>
-              <h3 className="truncate">{room.creatorId}</h3>
-              <div className="mt-auto  flex flex-wrap justify-start content-start  gap-x-1 gap-y-1  overflow-hidden ">
-                {room.tags.map((tag) => (
-                  <div
-                    className="inline-flex items-center rounded-full border-2 h-8 text-base min-w-max  pr-2"
-                    key={tag.name}
+      <Typography variant="h4" component="h4">
+        방 리스트
+      </Typography>
+      <Grid
+        container
+        spacing={3}
+        direction="row"
+        justifyContent="flex-start"
+        alignItems="flex-start"
+      >
+        {roomList.map((room) => (
+          <Grid item xs={6} md={3} key={room.name}>
+            <Card className={classes.roomCard}>
+              <CardActionArea>
+                <CardContent>
+                  <Typography
+                    className={classes.title}
+                    color="textSecondary"
+                    gutterBottom
                   >
-                    <img
-                      src={tag.icon}
-                      className="w-8 h-8 inline-block border-2 rounded-full mr-1"
-                    ></img>
-                    {tag.name}
+                    {room.creatorId}
+                  </Typography>
+                  <Typography variant="h5" component="h2">
+                    {room.name}
+                  </Typography>
+                  <Typography className={classes.pos} color="textSecondary">
+                    adjective
+                  </Typography>
+                  <Typography variant="body2" component="p">
+                    well meaning and kindly.
+                    <br />
+                    {'"a benevolent smile"'}
+                  </Typography>
+                  <div>
+                    {room.tags.map((data) => {
+                      return (
+                        <Chip
+                          clickable={false}
+                          key={data.name}
+                          variant="outlined"
+                          avatar={<Avatar alt={data.name} src={data.icon} />}
+                          label={data.name}
+                        />
+                      )
+                    })}
                   </div>
-                ))}
-              </div>
-              <div
-                className={`absolute right-2 bottom-2 ${
-                  room.count / room.max >= 1 && 'text-red-500'
-                }`}
-              >
-                {room.count}/{room.max}
-              </div>
-            </div>
-          </div>
+                </CardContent>
+              </CardActionArea>
+              <CardActions>
+                <Button size="small" color="primary">
+                  참가하기
+                </Button>
+                <Button size="small" color="primary">
+                  정보
+                </Button>
+              </CardActions>
+            </Card>
+          </Grid>
         ))}
-        {Array(6)
-          .fill(0)
-          .map((_, id) => (
-            <div
-              key={`${id}`}
-              className="w-60 h-0  inline-block flex-grow"
-            ></div>
-          ))}
-      </div>
+      </Grid>
     </Layout>
   )
 }
