@@ -1,10 +1,8 @@
 import { FC } from 'react'
 import Head from 'next/head'
-import { GlobalStyles } from 'twin.macro'
 import { AppProps } from 'next/app'
 import { client } from '~/apollo'
 import { ApolloProvider } from '@apollo/client'
-import 'tailwindcss/tailwind.css'
 import React from 'react'
 import { ThemeProvider } from '@material-ui/core/styles'
 import CssBaseline from '@material-ui/core/CssBaseline'
@@ -30,7 +28,6 @@ const App: FC<AppProps> = ({ Component, pageProps }: AppProps) => {
             content="minimum-scale=1, initial-scale=1, width=device-width"
           />
         </Head>
-        <GlobalStyles />
         <ThemeProvider theme={theme}>
           {/* CssBaseline kickstart an elegant, consistent, and simple baseline to build upon. */}
           <CssBaseline />
