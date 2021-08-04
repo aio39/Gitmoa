@@ -1,6 +1,6 @@
 import Layout from '../components/layout'
 import { useForm, SubmitHandler, Controller } from 'react-hook-form'
-import { useRef, useState } from 'react'
+import React, { useRef, useState } from 'react'
 import TagModal from '~/components/tagModal'
 import QRCode from 'qrcode.react'
 import { gql, useMutation } from '@apollo/client'
@@ -12,9 +12,12 @@ import { CreateRoomInput } from '~/__generated__/globalTypes'
 import FormControlLabel from '@material-ui/core/FormControlLabel'
 import Checkbox from '@material-ui/core/Checkbox'
 import Switch from '@material-ui/core/Switch'
+import Autocomplete from '@material-ui/lab/Autocomplete'
 import {
+  Avatar,
   Button,
   Chip,
+  ClickAwayListener,
   createStyles,
   Grid,
   Paper,
@@ -39,6 +42,19 @@ const useStyles = makeStyles((theme: Theme) =>
     },
   })
 )
+
+interface ITag {
+  name: string
+  icon?: string
+}
+
+const tagsList: ITag[] = [
+  { name: 'tech', icon: '/icon/tech.svg' },
+  { name: 'javascript', icon: '/icon/javascript.png' },
+  { name: 'rust', icon: '/icon/rust.png' },
+  { name: 'python', icon: '/icon/python.png' },
+  { name: 'typescript', icon: '/icon/typescript.png' },
+]
 
 export const CREATE_ROOM_MUTATION = gql`
   mutation createRoomMutation($createRoomInput: CreateRoomInput!) {
@@ -147,9 +163,19 @@ export default function RoomCreate() {
     { key: 4, label: 'Vue.js' },
   ])
 
+  const [open, setOpen] = useState(false)
+
+  const handleClick = () => {
+    setOpen((prev) => !prev)
+  }
+
+  const handleClickAway = () => {
+    setOpen(false)
+  }
+
   return (
     <Layout>
-      <Typography variant="h2" component="h2">
+      <Typography variant="h3" component="h3">
         Create Room
       </Typography>
       <form>
@@ -199,22 +225,46 @@ export default function RoomCreate() {
           </Grid>
 
           <Grid item xs={12}>
-            <Paper component="ul" className={classes.tagWrapper}>
-              {tagsData.map((data) => {
-                let icon
-
-                return (
-                  <li key={data.key}>
+            <Autocomplete
+              multiple
+              id="tags"
+              style={{ width: 500 }}
+              options={tagsList}
+              classes={{}}
+              limitTags={5}
+              getOptionLabel={(option) => option.name}
+              freeSolo
+              renderOption={(option) => (
+                <React.Fragment>
+                  <Avatar alt={option.name} sizes="small" src={option.icon} />
+                  {option.name}
+                </React.Fragment>
+              )}
+              renderTags={(value, getTagProps) =>
+                value.map((tag, index: number) => {
+                  console.log(getTagProps({ index }))
+                  return (
                     <Chip
-                      icon={icon}
-                      label={data.label}
-                      onDelete={data.label === 'React' ? undefined : () => {}}
-                      className={classes.tag}
+                      key={tag.name}
+                      variant="outlined"
+                      label={tag.name}
+                      avatar={<Avatar alt={tag.name} src={tag.icon} />}
+                      {...getTagProps({ index })}
                     />
-                  </li>
+                  )
+                })
+              }
+              renderInput={(params) => {
+                return (
+                  <TextField
+                    {...params}
+                    variant="outlined"
+                    label="Tag"
+                    placeholder="Input Tag"
+                  />
                 )
-              })}
-            </Paper>
+              }}
+            />
           </Grid>
           <Grid item xs={12}>
             <Button variant="contained" color="primary">
