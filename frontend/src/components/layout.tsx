@@ -1,97 +1,183 @@
+import React from 'react'
+import AppBar from '@material-ui/core/AppBar'
+import CssBaseline from '@material-ui/core/CssBaseline'
+import Divider from '@material-ui/core/Divider'
+import Drawer from '@material-ui/core/Drawer'
+import Hidden from '@material-ui/core/Hidden'
+import IconButton from '@material-ui/core/IconButton'
+import InboxIcon from '@material-ui/icons/MoveToInbox'
+import List from '@material-ui/core/List'
+import ListItem from '@material-ui/core/ListItem'
+import ListItemIcon from '@material-ui/core/ListItemIcon'
+import ListItemText from '@material-ui/core/ListItemText'
+import MailIcon from '@material-ui/icons/Mail'
+import MenuIcon from '@material-ui/icons/Menu'
+import Toolbar from '@material-ui/core/Toolbar'
+import Typography from '@material-ui/core/Typography'
+import {
+  makeStyles,
+  useTheme,
+  Theme,
+  createStyles,
+} from '@material-ui/core/styles'
 import Link from 'next/link'
-import { useState } from 'react'
-import useModal from '~/hooks/useModal'
-import Modal from './Modal'
-import LoginModal from './modal/LoginModal'
-export default function Layout({ children }) {
-  const [toggle, setToggle] = useState(true)
+import HomeIcon from '@material-ui/icons/Home'
+import AddIcon from '@material-ui/icons/Add'
+import AccountBoxIcon from '@material-ui/icons/AccountBox'
+const navList: [string, string, React.ReactElement?][] = [
+  ['/', '홈화면', <HomeIcon key={1} />],
+  ['/room', 'Room', <AddIcon key={2} />],
+  ['/roomCreate', '방 만들기', <AddIcon key={3} />],
+  ['/hello', '첫화면', <AccountBoxIcon key={4} />],
+  ['/settings/profile', '프로필 설정'],
+  ['/room/123', '방 설정'],
+]
 
-  const navList = [
-    ['/', '홈화면'],
-    ['/room', 'Room'],
-    ['/roomCreate', '방 만들기'],
-    ['/hello', '첫화면'],
-    ['/settings/profile', '프로필 설정'],
-    ['/room/123', '방 설정'],
-  ]
+const drawerWidth = 240
 
-  const toggleHandler = () => {
-    setToggle((prev) => !prev)
+const useStyles = makeStyles((theme: Theme) =>
+  createStyles({
+    root: {
+      display: 'flex',
+    },
+    drawer: {
+      [theme.breakpoints.up('sm')]: {
+        width: drawerWidth,
+        flexShrink: 0,
+      },
+    },
+    appBar: {
+      [theme.breakpoints.up('sm')]: {
+        // width: `calc(100% - ${drawerWidth}px)`,
+        width: `calc(100% - ${drawerWidth}px)`,
+        marginLeft: drawerWidth,
+        height: '4rem',
+      },
+    },
+    menuButton: {
+      marginRight: theme.spacing(2),
+      [theme.breakpoints.up('sm')]: {
+        display: 'none',
+      },
+    },
+    // necessary for content to be below app bar
+    toolbar: theme.mixins.toolbar,
+    drawerPaper: {
+      width: drawerWidth,
+    },
+    content: {
+      flexGrow: 1,
+      padding: theme.spacing(3),
+    },
+  })
+)
+
+interface Props {
+  /**
+   * Injected by the documentation to work in an iframe.
+   * You won't need it on your project.
+   */
+  children: React.ReactNode
+  window?: () => Window
+}
+
+export default function Layout(props: Props) {
+  const { window, children } = props
+  const classes = useStyles()
+  const theme = useTheme()
+  const [mobileOpen, setMobileOpen] = React.useState(false)
+
+  const handleDrawerToggle = () => {
+    setMobileOpen(!mobileOpen)
   }
 
-  const { isShowing, modalToggle } = useModal()
+  const drawer = (
+    <div>
+      <div className={classes.toolbar} />
+      <Divider />
+      <List>
+        {navList.map((navItem, index) => {
+          const [url, name, icon] = navItem
+          return (
+            <Link href={url} key={name}>
+              <ListItem button>
+                <ListItemIcon>{icon}</ListItemIcon>
+                <ListItemText primary={name} />
+              </ListItem>
+            </Link>
+          )
+        })}
+      </List>
+      <Divider />
+      <List>
+        {['All mail', 'Trash', 'Spam'].map((text, index) => (
+          <ListItem button key={text}>
+            <ListItemIcon>
+              {index % 2 === 0 ? <InboxIcon /> : <MailIcon />}
+            </ListItemIcon>
+            <ListItemText primary={text} />
+          </ListItem>
+        ))}
+      </List>
+    </div>
+  )
+
+  const container =
+    window !== undefined ? () => window().document.body : undefined
 
   return (
     <>
-      <div className="relative min-h-screen md:flex">
-        <div className="bg-gray-800 text-gray-100 flex justify-between md:hidden">
-          <a href="#" className="block p-4 text-white font-bold">
-            GitMoa
-          </a>
-
-          <button
-            onClick={toggleHandler}
-            className="mobile-menu-button p-4 focus:outline-none focus:bg-gray-700"
+      <AppBar position="sticky" className={classes.appBar}>
+        <Toolbar>
+          <IconButton
+            color="inherit"
+            aria-label="open drawer"
+            edge="start"
+            onClick={handleDrawerToggle}
+            className={classes.menuButton}
           >
-            <svg
-              className="h-5 w-5"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
+            <MenuIcon />
+          </IconButton>
+          <Typography variant="h6" noWrap>
+            Gitmoa
+          </Typography>
+        </Toolbar>
+      </AppBar>
+      <div className={classes.root}>
+        <CssBaseline />
+
+        <nav className={classes.drawer} aria-label="mailbox folders">
+          {/* The implementation can be swapped with js to avoid SEO duplication of links. */}
+          <Hidden smUp implementation="css">
+            <Drawer
+              container={container}
+              variant="temporary"
+              anchor={theme.direction === 'rtl' ? 'right' : 'left'}
+              open={mobileOpen}
+              onClose={handleDrawerToggle}
+              classes={{
+                paper: classes.drawerPaper,
+              }}
+              ModalProps={{
+                keepMounted: true, // Better open performance on mobile.
+              }}
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M4 6h16M4 12h16M4 18h16"
-              />
-            </svg>
-          </button>
-        </div>
-        <div
-          className={`bg-gray-800 text-blue-100 w-64 space-y-6 py-7 px-2 absolute inset-y-0 left-0 transform ${
-            toggle && '-translate-x-full'
-          } md:relative md:translate-x-0 transition duration-200 ease-in-out z-10`}
-        >
-          <Link href="/">
-            <a className="text-white flex items-center space-x-2 px-4">
-              <svg
-                className="w-8 h-8"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"
-                />
-              </svg>
-              <span className="text-2xl font-extrabold">GitMoa</span>
-            </a>
-          </Link>
-          <nav>
-            {navList.map((item) => (
-              <Link key={item[0]} href={item[0]}>
-                <a className="block py-2.5 px-4 rounded transition duration-200 hover:bg-green-500 hover:text-white">
-                  {item[1]}
-                </a>
-              </Link>
-            ))}
-          </nav>
-          <button className="button-default" onClick={modalToggle}>
-            Show Modal
-          </button>
-          <Modal isShowing={isShowing} hide={modalToggle}>
-            <LoginModal />
-          </Modal>
-        </div>
-        <main className="p-3 text-2xl font-bold w-full min-h-screen">
-          {children}
-        </main>
+              {drawer}
+            </Drawer>
+          </Hidden>
+          <Hidden xsDown implementation="css">
+            <Drawer
+              classes={{
+                paper: classes.drawerPaper,
+              }}
+              variant="permanent"
+              open
+            >
+              {drawer}
+            </Drawer>
+          </Hidden>
+        </nav>
+        <main className={classes.content}>{children}</main>
       </div>
     </>
   )

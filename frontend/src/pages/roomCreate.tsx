@@ -12,7 +12,33 @@ import { CreateRoomInput } from '~/__generated__/globalTypes'
 import FormControlLabel from '@material-ui/core/FormControlLabel'
 import Checkbox from '@material-ui/core/Checkbox'
 import Switch from '@material-ui/core/Switch'
-import { Grid, TextField, Typography } from '@material-ui/core'
+import {
+  Button,
+  Chip,
+  createStyles,
+  Grid,
+  Paper,
+  Slider,
+  TextField,
+  Typography,
+} from '@material-ui/core'
+import { makeStyles } from '@material-ui/styles'
+
+const useStyles = makeStyles((theme: Theme) =>
+  createStyles({
+    tagWrapper: {
+      display: 'flex',
+      justifyContent: 'center',
+      flexWrap: 'wrap',
+      listStyle: 'none',
+      padding: theme.spacing(0.5),
+      margin: 0,
+    },
+    tag: {
+      margin: theme.spacing(0.5),
+    },
+  })
+)
 
 export const CREATE_ROOM_MUTATION = gql`
   mutation createRoomMutation($createRoomInput: CreateRoomInput!) {
@@ -85,7 +111,6 @@ export default function RoomCreate() {
 
     link.click()
   }
-  console.log(watch())
 
   const onCompleted = (data: createRoomMutation) => {
     const {
@@ -108,150 +133,96 @@ export default function RoomCreate() {
       }
     )
 
+  interface ChipData {
+    key: number
+    label: string
+  }
+
+  const classes = useStyles()
+  const [tagsData, setTagsData] = useState<ChipData[]>([
+    { key: 0, label: 'Angular' },
+    { key: 1, label: 'jQuery' },
+    { key: 2, label: 'Polymer' },
+    { key: 3, label: 'React' },
+    { key: 4, label: 'Vue.js' },
+  ])
+
   return (
     <Layout>
-      <div className="flex flex-col pt-12 px-44 " onClick={LayoutClickHandler}>
-        <Typography variant="h2" gutterBottom>
-          Create Room
-        </Typography>
-        {isSubmit ? (
-          <div className="flex flex-col items-center">
-            <h2>제출</h2>
-            <div ref={canvasRef}>
-              <QRCode value={submitResult.link} />
-            </div>
-            <button onClick={handleQRCode}>Click</button>
-          </div>
-        ) : (
-          <form className="flex flex-col" onSubmit={handleSubmit(onSubmit)}>
-            <Grid container spacing={3}>
-              <Grid item xs={12} sm={6}>
-                <Controller
-                  name="RoomName"
-                  control={control}
-                  render={({ field }) => (
-                    <TextField
-                      {...field}
-                      required
-                      id="RoomName"
-                      name="RoomName"
-                      label="Room name"
-                      fullWidth
+      <Typography variant="h2" component="h2">
+        Create Room
+      </Typography>
+      <form>
+        <Grid
+          container
+          spacing={3}
+          direction="column"
+          justifyContent="flex-start"
+          alignItems="flex-start"
+        >
+          <Grid item xs={12}>
+            <TextField id="standard-basic" label="방이름" />
+          </Grid>
+          <Grid item xs={12}>
+            <TextField id="standard-basic" label="설명" />
+          </Grid>
+          <Grid item xs={12}>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  name="시크릿 방으로 설정하시겠습니까 ?"
+                  color="primary"
+                />
+              }
+              label="시크릿 방으로 설정하시겠습니까 ?"
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <FormControlLabel
+              control={<Checkbox name="검색 가능" color="primary" />}
+              label="검색 가능"
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <Typography id="discrete-slider" gutterBottom>
+              인원 제한한
+            </Typography>
+            <Slider
+              defaultValue={100}
+              aria-labelledby="discrete-slider"
+              valueLabelDisplay="auto"
+              step={10}
+              marks
+              min={10}
+              max={100}
+            />
+          </Grid>
+
+          <Grid item xs={12}>
+            <Paper component="ul" className={classes.tagWrapper}>
+              {tagsData.map((data) => {
+                let icon
+
+                return (
+                  <li key={data.key}>
+                    <Chip
+                      icon={icon}
+                      label={data.label}
+                      onDelete={data.label === 'React' ? undefined : () => {}}
+                      className={classes.tag}
                     />
-                  )}
-                />
-              </Grid>
-              <div className="mb-4">
-                <label
-                  htmlFor="name"
-                  className="block text-gray-700 text-lg font-bold mb-2"
-                >
-                  RoomName
-                </label>
-                <input
-                  type="text"
-                  id="name"
-                  placeholder="Room Name"
-                  {...register('name', { required: true })}
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                />
-              </div>
-
-              {errors.name && (
-                <span className="text-2xl">This field is required</span>
-              )}
-
-              <div>
-                isSecret
-                <Controller
-                  name="isSecret"
-                  control={control}
-                  render={({ field }) => (
-                    <Switch
-                      {...field}
-                      name="checkedA"
-                      inputProps={{ 'aria-label': 'secondary checkbox' }}
-                    />
-                  )}
-                />
-                <Controller
-                  name="isSecret"
-                  control={control}
-                  render={({ field }) => (
-                    <FormControlLabel
-                      control={<Checkbox name="checkedB" color="primary" />}
-                      label="Primary"
-                    />
-                  )}
-                />
-              </div>
-              <div>
-                password
-                <input type="password" name="password" />
-              </div>
-              <div className="flex  mb-3">
-                <h3>인원 제한</h3>
-                <input
-                  type="number"
-                  name="maxPeople"
-                  id="maxPeople"
-                  className="appearance-none "
-                />
-              </div>
-              <div>
-                <label htmlFor="isCanSearched">검색 가능 여부</label>
-                <input
-                  defaultChecked={true}
-                  type="checkbox"
-                  name="isCanSearched"
-                  id="isCanSearched"
-                  {...register('isCanSearched')}
-                />
-              </div>
-
-              <div>icons</div>
-              <div className="flex flex-col">
-                description
-                <textarea
-                  name="description"
-                  id="description"
-                  placeholder="방 소개"
-                  {...register('description')}
-                  className="border-2 rounded-lg border-gray-400 focus:border-green-600 py-4 px-4"
-                />
-              </div>
-              <div>
-                tags
-                <div onClick={ShowModalHandler} className="w-64">
-                  <div className="flex  p-4 bg-indigo-100 rounded-xl">
-                    {tagList.map((tag) => (
-                      <div
-                        key={tag}
-                        className="flex  rounded-lg bg-white px-2 py-1 "
-                      >
-                        {tag}
-                        <div data-tag-name={tag} onClick={TagCancelHandler}>
-                          ❌
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  {isShowTagModal && (
-                    <TagModal setTagList={setTagList} tagList={tagList} />
-                  )}
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                className="mb-2 bg-green-400 px-5 py-2 text-xl tracking-wider rounded-2xl mx-24"
-              >
-                Create
-              </button>
-            </Grid>
-          </form>
-        )}
-      </div>
+                  </li>
+                )
+              })}
+            </Paper>
+          </Grid>
+          <Grid item xs={12}>
+            <Button variant="contained" color="primary">
+              Create
+            </Button>
+          </Grid>
+        </Grid>
+      </form>
     </Layout>
   )
 }
