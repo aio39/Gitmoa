@@ -1,4 +1,7 @@
 import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
   Avatar,
   Button,
   Card,
@@ -11,7 +14,7 @@ import {
   Typography,
 } from '@material-ui/core'
 import Layout from '../components/layout'
-
+import ExpandMoreIcon from '@material-ui/icons/ExpandMore'
 const useStyles = makeStyles({
   roomCard: {
     width: '100%',
@@ -57,6 +60,18 @@ export default function Rooms() {
       <Typography variant="h4" component="h4">
         방 리스트
       </Typography>
+      <Accordion>
+        <AccordionSummary
+          expandIcon={<ExpandMoreIcon />}
+          aria-controls="panel1a-content"
+          id="panel1a-header"
+        >
+          <Typography>Accordion 1</Typography>
+        </AccordionSummary>
+        <AccordionDetails>
+          <Typography>Typography</Typography>
+        </AccordionDetails>
+      </Accordion>
       <Grid
         container
         spacing={3}

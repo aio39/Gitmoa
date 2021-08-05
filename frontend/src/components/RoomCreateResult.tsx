@@ -1,6 +1,12 @@
 import React, { useRef } from 'react'
 import QRCode from 'qrcode.react'
 
+declare class ClipboardItem {
+  constructor(data: { [mimeType: string]: Blob })
+}
+
+declare const navigator: any
+
 const RoomCreateResult = () => {
   const canvasRef = useRef<HTMLDivElement>(null)
 

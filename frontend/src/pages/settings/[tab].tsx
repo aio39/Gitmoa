@@ -1,7 +1,5 @@
 import { useRouter } from 'next/router'
-import MiniBtn from '~/components/button/MiniBtn'
 import Layout from '~/components/layout'
-import TabBoarder from '~/components/TabBoader'
 import { useMe } from '~/hooks/useMe'
 
 export type tabObject = {
@@ -22,9 +20,6 @@ export default function Settings() {
   return (
     <Layout>
       <div>Hello</div>
-      <TabBoarder tabList={tabList} nowTab={tab} />
-      {userData?.findUserMe?.user?.id}
-      <MiniBtn text="안녕" />
     </Layout>
   )
 }

@@ -24,6 +24,7 @@ import Link from 'next/link'
 import HomeIcon from '@material-ui/icons/Home'
 import AddIcon from '@material-ui/icons/Add'
 import AccountBoxIcon from '@material-ui/icons/AccountBox'
+import { Container } from '@material-ui/core'
 const navList: [string, string, React.ReactElement?][] = [
   ['/', '홈화면', <HomeIcon key={1} />],
   ['/room', 'Room', <AddIcon key={2} />],
@@ -67,6 +68,7 @@ const useStyles = makeStyles((theme: Theme) =>
     },
     content: {
       flexGrow: 1,
+      flexShrink: 1,
       padding: theme.spacing(3),
     },
   })
@@ -96,7 +98,7 @@ export default function Layout(props: Props) {
       <div className={classes.toolbar} />
       <Divider />
       <List>
-        {navList.map((navItem, index) => {
+        {navList.map((navItem) => {
           const [url, name, icon] = navItem
           return (
             <Link href={url} key={name}>
@@ -177,7 +179,7 @@ export default function Layout(props: Props) {
             </Drawer>
           </Hidden>
         </nav>
-        <main className={classes.content}>{children}</main>
+        <Container className={classes.content}>{children}</Container>
       </div>
     </>
   )

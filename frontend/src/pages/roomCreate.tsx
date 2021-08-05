@@ -1,28 +1,24 @@
 import Layout from '../components/layout'
 import { useForm, SubmitHandler, Controller } from 'react-hook-form'
-import React, { useRef, useState } from 'react'
-import TagModal from '~/components/tagModal'
-import QRCode from 'qrcode.react'
-import { gql, useMutation } from '@apollo/client'
+import React, { useState } from 'react'
+import { useMutation } from '@apollo/client'
 import {
   createRoomMutation,
   createRoomMutationVariables,
 } from '~/__generated__/createRoomMutation'
+import { yupResolver } from '@hookform/resolvers/yup'
 import { CreateRoomInput } from '~/__generated__/globalTypes'
 import FormControlLabel from '@material-ui/core/FormControlLabel'
 import Checkbox from '@material-ui/core/Checkbox'
-import Switch from '@material-ui/core/Switch'
 import Autocomplete from '@material-ui/lab/Autocomplete'
 import {
   Avatar,
   Backdrop,
   Button,
   Chip,
-  ClickAwayListener,
   createStyles,
   CircularProgress,
   Grid,
-  Paper,
   Slider,
   TextField,
   Typography,
@@ -30,6 +26,7 @@ import {
   Radio,
   Divider,
   Box,
+  Theme,
 } from '@material-ui/core'
 import { makeStyles } from '@material-ui/styles'
 import RoomCreateResult from '~/components/RoomCreateResult'
@@ -49,6 +46,11 @@ const useStyles = makeStyles((theme: Theme) =>
     tag: {
       margin: theme.spacing(0.5),
     },
+    gridWrapper: {
+      '& .MuiGrid-item': {
+        width: '100%',
+      },
+    },
     label: {
       '& label::after': {
         content: '"*"',
@@ -59,7 +61,13 @@ const useStyles = makeStyles((theme: Theme) =>
   })
 )
 
+// interface CreateRoomInput {
+//   isSecret?: boolean | null | string
+// }
+
 import { ITag } from '~/fakeData'
+import HFEText from '~/components/text/HookFormErrorText'
+import yupCreateRoom from '~/yup/yup_createRoom'
 
 export default function RoomCreate() {
   const [isSubmit, setIsSubmit] = useState(false)
@@ -71,8 +79,15 @@ export default function RoomCreate() {
     control,
     formState: { errors },
   } = useForm<CreateRoomInput>({
-    mode: 'onBlur',
-    reValidateMode: 'onChange',
+    mode: 'onChange',
+    reValidateMode: 'onBlur',
+    resolver: yupResolver(yupCreateRoom),
+    defaultValues: {
+      isSecret: false,
+      tagNames: [],
+      maxNum: 100,
+      isCanSearched: true,
+    },
   })
 
   const onSubmit: SubmitHandler<CreateRoomInput> = async (data) => {
@@ -81,7 +96,7 @@ export default function RoomCreate() {
         createRoomInput: { ...data },
       },
     })
-    console.log('erros', errors)
+    console.log('error', errors)
 
     setIsSubmit((_) => true)
   }
@@ -113,21 +128,21 @@ export default function RoomCreate() {
     }
   )
   console.log(createRoomMutationResult)
-  console.log(watch())
   return (
     <Layout>
-      <Backdrop open={createRequestLoading}>
-        <CircularProgress color="inherit" />
-      </Backdrop>
       {createRequestLoading && !createRequestLoading && !createRequestError ? (
         <RoomCreateResult />
       ) : (
-        <React.Fragment>
+        <Box>
+          <Backdrop open={createRequestLoading}>
+            <CircularProgress color="inherit" />
+          </Backdrop>
           <Typography variant="h3" component="h3">
             Create Room
           </Typography>
           <form onSubmit={handleSubmit(onSubmit)}>
             <Grid
+              classes={{ root: classes.gridWrapper }}
               container
               spacing={3}
               direction="column"
@@ -141,27 +156,37 @@ export default function RoomCreate() {
                   render={({ field }) => (
                     <TextField
                       {...field}
+                      fullWidth
                       classes={{ root: classes.label }}
                       id="name"
                       label="방이름"
                     />
                   )}
                 />
+                <HFEText text={errors.name?.message} />
               </Grid>
               <Grid item xs={12}>
                 <Controller
                   name="description"
                   control={control}
                   render={({ field }) => (
-                    <TextField {...field} id="description" label="설명" />
+                    <TextField
+                      {...field}
+                      fullWidth
+                      id="description"
+                      label="설명"
+                    />
                   )}
                 />
+                <HFEText text={errors.description?.message} />
               </Grid>
               <Grid item xs={12}>
                 <Divider />
+
                 <Controller
                   name="isSecret"
                   control={control}
+                  //  @ts-ignore
                   defaultValue={'false'}
                   render={({ field }) => (
                     <RadioGroup {...field}>
@@ -202,19 +227,22 @@ export default function RoomCreate() {
                   )}
                 />
                 <Box
+                  // @ts-ignore
                   display={getValues('isSecret') === 'true' ? 'block' : 'none'}
                 >
-                  <Controller
-                    name="isCanSearched"
-                    control={control}
-                    defaultValue={true}
-                    render={({ field }) => (
-                      <FormControlLabel
-                        control={<Checkbox {...field} color="primary" />}
-                        label="검색 가능"
-                      />
-                    )}
-                  />
+                  <div>
+                    <Controller
+                      name="isCanSearched"
+                      control={control}
+                      defaultValue={true}
+                      render={({ field }) => (
+                        <FormControlLabel
+                          control={<Checkbox {...field} color="primary" />}
+                          label="검색 가능"
+                        />
+                      )}
+                    />
+                  </div>
                 </Box>
                 <Divider />
               </Grid>
@@ -229,6 +257,7 @@ export default function RoomCreate() {
                   control={control}
                   defaultValue={100}
                   render={({ field }) => (
+                    // @ts-ignore
                     <Slider
                       {...field}
                       component="div"
@@ -253,15 +282,16 @@ export default function RoomCreate() {
                     <Autocomplete
                       multiple
                       freeSolo
+                      disableClearable
+                      disabled={getValues('tagNames')?.length > 3}
                       fullWidth
                       onChange={(e, v) => {
                         const v2 = v as ITag[]
                         field.onChange(v2.map((i) => i.name))
                       }}
-                      style={{ width: 500 }}
+                      selectOnFocus
                       options={tagsList}
                       classes={{}}
-                      limitTags={5}
                       getOptionLabel={(option) => option.name}
                       noOptionsText={'No saved Tag'}
                       renderOption={(option) => {
@@ -277,13 +307,13 @@ export default function RoomCreate() {
                         )
                       }}
                       renderInput={(params) => {
-                        console.log('renderInput', params)
                         return (
                           <TextField
+                            {...params}
                             // variant="outlined"
+                            fullWidth
                             label="Tag"
                             placeholder="Input Tag"
-                            {...params}
                           />
                         )
                       }}
@@ -291,15 +321,16 @@ export default function RoomCreate() {
                         value.map((tag, index: number) => {
                           return (
                             <Chip
-                              key={tag.name || tag}
+                              {...getTagProps({ index })}
+                              key={index}
                               variant="outlined"
+                              disabled={false}
                               label={tag.name || tag}
                               avatar={
                                 tag.icon && (
                                   <Avatar alt={tag.name} src={tag.icon} />
                                 )
                               }
-                              {...getTagProps({ index })}
                             />
                           )
                         })
@@ -315,7 +346,7 @@ export default function RoomCreate() {
               </Grid>
             </Grid>
           </form>
-        </React.Fragment>
+        </Box>
       )}
     </Layout>
   )

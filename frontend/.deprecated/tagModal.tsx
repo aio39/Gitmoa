@@ -7,16 +7,16 @@ type TagModalProps = {
 
 export default function TagModal({ tagList, setTagList }: TagModalProps) {
   const loadedTagList = [
-    { name: 'javasciprt1', link: '/icon/javascript.png', selected: false },
-    { name: 'javasciprt2', link: '/icon/javascript.png', selected: false },
-    { name: 'javasciprt3', link: '/icon/javascript.png', selected: false },
-    { name: 'javasciprt4', link: '/icon/javascript.png', selected: false },
-    { name: 'javasciprt6a', link: '/icon/javascript.png', selected: false },
-    { name: 'javasciprt1a', link: '/icon/javascript.png', selected: false },
-    { name: 'javasciprt2a', link: '/icon/javascript.png', selected: false },
-    { name: 'javasciprt3a', link: '/icon/javascript.png', selected: false },
-    { name: 'javasciprt4a', link: '/icon/javascript.png', selected: false },
-    { name: 'javasciprt5a', link: '/icon/javascript.png', selected: false },
+    { name: 'javascript1', link: '/icon/javascript.png', selected: false },
+    { name: 'javascript2', link: '/icon/javascript.png', selected: false },
+    { name: 'javascript3', link: '/icon/javascript.png', selected: false },
+    { name: 'javascript4', link: '/icon/javascript.png', selected: false },
+    { name: 'javascript6a', link: '/icon/javascript.png', selected: false },
+    { name: 'javascript1a', link: '/icon/javascript.png', selected: false },
+    { name: 'javascript2a', link: '/icon/javascript.png', selected: false },
+    { name: 'javascript3a', link: '/icon/javascript.png', selected: false },
+    { name: 'javascript4a', link: '/icon/javascript.png', selected: false },
+    { name: 'javascript5a', link: '/icon/javascript.png', selected: false },
   ]
   const [savedTagList, setSavedTagList] = useState(loadedTagList)
 

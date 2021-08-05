@@ -8,12 +8,13 @@
 //==============================================================
 
 export interface CreateRoomInput {
-  name: string;
-  description?: string | null;
-  isSecret?: boolean | null;
-  isCanSearched?: boolean | null;
-  password?: string | null;
-  tagNames: string[];
+  name: string
+  description?: string | null
+  isSecret?: boolean | null
+  isCanSearched?: boolean | null
+  password?: string | null
+  tagNames?: string[]
+  maxNum: number
 }
 
 //==============================================================
