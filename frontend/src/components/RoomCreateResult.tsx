@@ -12,7 +12,7 @@ const RoomCreateResult = () => {
 
   const handleQRCode = () => {
     const node: any = canvasRef.current.childNodes[0]
-    console.log(node)
+
     node.toBlob((blob) => {
       const item = new ClipboardItem({ 'image/png': blob })
       navigator.clipboard.write([item])
