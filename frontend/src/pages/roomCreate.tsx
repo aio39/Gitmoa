@@ -17,7 +17,6 @@ import {
   createStyles,
   CircularProgress,
   Grid,
-  Slider,
   TextField,
   Typography,
   Divider,
@@ -65,6 +64,7 @@ import { ITag } from '~/fakeData'
 import HFEText from '~/components/text/HookFormErrorText'
 import yupCreateRoom from '~/yup/yup_createRoom'
 import IsSecretRadio from '~/components/pageParts/roomCreate/IsSecretRadio'
+import MaxNumSlider from '~/components/pageParts/roomCreate/maxNumSlider'
 
 export default function RoomCreate() {
   const [isSubmit, setIsSubmit] = useState(false)
@@ -184,30 +184,7 @@ export default function RoomCreate() {
               </Grid>
               <Grid item xs={12}></Grid>
               <Grid item xs={12}>
-                <Typography id="discrete-slider" gutterBottom>
-                  인원 제한
-                </Typography>
-
-                <Controller
-                  name="maxNum"
-                  control={control}
-                  defaultValue={100}
-                  render={({ field }) => (
-                    // @ts-ignore
-                    <Slider
-                      {...field}
-                      component="div"
-                      valueLabelDisplay="auto"
-                      step={10}
-                      marks
-                      min={10}
-                      max={100}
-                      onChange={(e, v) => {
-                        field.onChange(v)
-                      }}
-                    />
-                  )}
-                />
+                <MaxNumSlider control={control} />
               </Grid>
 
               <Grid item xs={12}>
