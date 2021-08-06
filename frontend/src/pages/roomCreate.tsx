@@ -65,6 +65,7 @@ import HFEText from '~/components/text/HookFormErrorText'
 import yupCreateRoom from '~/yup/yup_createRoom'
 import IsSecretRadio from '~/components/pageParts/roomCreate/IsSecretRadio'
 import MaxNumSlider from '~/components/pageParts/roomCreate/maxNumSlider'
+import TagSelect from '~/components/pageParts/roomCreate/TagSelect'
 
 export default function RoomCreate() {
   const [isSubmit, setIsSubmit] = useState(false)
@@ -125,6 +126,7 @@ export default function RoomCreate() {
     }
   )
   console.log(createRoomMutationResult)
+  console.log('watch', watch())
   return (
     <Layout>
       {createRequestLoading && !createRequestLoading && !createRequestError ? (
@@ -188,7 +190,7 @@ export default function RoomCreate() {
               </Grid>
 
               <Grid item xs={12}>
-                <Controller
+                {/* <Controller
                   name="tagNames"
                   control={control}
                   render={({ field }) => (
@@ -250,7 +252,8 @@ export default function RoomCreate() {
                       }
                     />
                   )}
-                />
+                /> */}
+                <TagSelect control={control} />
               </Grid>
               <Grid item xs={12}>
                 <Button variant="contained" color="primary">
