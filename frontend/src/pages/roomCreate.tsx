@@ -68,6 +68,7 @@ const useStyles = makeStyles((theme: Theme) =>
 import { ITag } from '~/fakeData'
 import HFEText from '~/components/text/HookFormErrorText'
 import yupCreateRoom from '~/yup/yup_createRoom'
+import SecretOption from '~/components/pageParts/roomCreate/SecretOption'
 
 export default function RoomCreate() {
   const [isSubmit, setIsSubmit] = useState(false)
@@ -182,7 +183,6 @@ export default function RoomCreate() {
               </Grid>
               <Grid item xs={12}>
                 <Divider />
-
                 <Controller
                   name="isSecret"
                   control={control}
@@ -211,39 +211,29 @@ export default function RoomCreate() {
                           <Typography>공개로 설정합니다.</Typography>
                         </div>
                       </Box>
-                      <Box display="flex" alignItems="center">
-                        <div>
+                      <Box
+                        display="flex"
+                        flexDirection="row"
+                        flexWrap="nowrap"
+                        alignItems="flex-start"
+                      >
+                        <Box>
                           <Radio value="true" />
-                        </div>
-                        <svg height="32" viewBox="0 0 24 24" width="32">
-                          <path d="M6 9V7.25C6 3.845 8.503 1 12 1s6 2.845 6 6.25V9h.5a2.5 2.5 0 012.5 2.5v8a2.5 2.5 0 01-2.5 2.5h-13A2.5 2.5 0 013 19.5v-8A2.5 2.5 0 015.5 9H6zm1.5-1.75C7.5 4.58 9.422 2.5 12 2.5c2.578 0 4.5 2.08 4.5 4.75V9h-9V7.25zm-3 4.25a1 1 0 011-1h13a1 1 0 011 1v8a1 1 0 01-1 1h-13a1 1 0 01-1-1v-8z"></path>
-                        </svg>
-                        <div>
+                        </Box>
+                        <Box mr={2}>
+                          <svg height="32" viewBox="0 0 24 24" width="32">
+                            <path d="M6 9V7.25C6 3.845 8.503 1 12 1s6 2.845 6 6.25V9h.5a2.5 2.5 0 012.5 2.5v8a2.5 2.5 0 01-2.5 2.5h-13A2.5 2.5 0 013 19.5v-8A2.5 2.5 0 015.5 9H6zm1.5-1.75C7.5 4.58 9.422 2.5 12 2.5c2.578 0 4.5 2.08 4.5 4.75V9h-9V7.25zm-3 4.25a1 1 0 011-1h13a1 1 0 011 1v8a1 1 0 01-1 1h-13a1 1 0 01-1-1v-8z"></path>
+                          </svg>
+                        </Box>
+                        <Box flexGrow={1}>
                           <Typography>Secret</Typography>
                           <Typography>비공개로 설정합니다 .</Typography>
-                        </div>
+                          <SecretOption control={control} />
+                        </Box>
                       </Box>
                     </RadioGroup>
                   )}
                 />
-                <Box
-                  // @ts-ignore
-                  display={getValues('isSecret') === 'true' ? 'block' : 'none'}
-                >
-                  <div>
-                    <Controller
-                      name="isCanSearched"
-                      control={control}
-                      defaultValue={true}
-                      render={({ field }) => (
-                        <FormControlLabel
-                          control={<Checkbox {...field} color="primary" />}
-                          label="검색 가능"
-                        />
-                      )}
-                    />
-                  </div>
-                </Box>
                 <Divider />
               </Grid>
               <Grid item xs={12}></Grid>
