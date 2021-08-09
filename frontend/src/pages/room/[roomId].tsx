@@ -4,7 +4,19 @@ import { useRouter } from 'next/router'
 import { useState } from 'react'
 import MyResponsiveBar from '~/components/roomDetailPage/weekendsDataChart'
 import { useMemo } from 'react'
-import { Box } from '@material-ui/core'
+import { Box, Grid, Typography } from '@material-ui/core'
+import UserList from '~/components/roomDetailPage/UserList'
+import { FC } from 'react'
+
+const TypoA: FC<{ text: string }> = ({ text }) => {
+  return (
+    <Typography variant="h4" component="div">
+      <Box textAlign="center" fontWeight={600}>
+        {text}
+      </Box>
+    </Typography>
+  )
+}
 
 const Room = () => {
   const router = useRouter()
@@ -58,44 +70,34 @@ const Room = () => {
     }))
   }, [weekData, roomData])
 
-  console.log(memoData)
+  const memoUserData = useMemo(() => {
+    const userMap = new Map()
+    for (const user of roomData.userData) {
+      userMap.set(user.userId, user)
+    }
+    return userMap
+  }, [roomData])
 
   return (
     <Layout>
-      <div className="mb-4 flex">
-        <h1 className="text-4xl">방 {roomId}</h1>
-      </div>
-      <div className="flex gap-2 bg-gray-700 w-max border-2 rounded-xl px-3">
-        <span className="border-r-2 border-white p-2">Week</span>
-        <span className="border-r-2 border-white p-2">Month</span>
-        <span className="p-2">Day</span>
-      </div>
-      <div className="flex bg-gray-600 gap-x-1 p-1">
-        {weekData.map((dayData) => (
-          <div
-            key={dayData.date}
-            className="bg-white relative flex-grow h-64 mar h-"
-          >
-            <div
-              className={`absolute bg-yellow-500 w-full bottom-0  h-${Math.floor(
-                6 * (1 - dayData.failedList.length / roomData.userData.length)
-              )}/6 ${dayData.failedList.length === 0 && 'h-full bg-green-600'}`}
-            ></div>
-            {dayjs(dayData.date).format('MM/DD')}
-          </div>
-        ))}
-      </div>
-      <div className="flex w-1/2">
-        <div className="flex-grow">
-          <h3 className="text-center">성공 리스트</h3>
-        </div>
-        <div className="flex-grow">
-          <h3 className="text-center">실패리스트</h3>
-        </div>
-      </div>
-      <div style={{ height: '500px', width: '100%' }}>
-        <MyResponsiveBar data={memoData} total={totalUserNumber} />
-      </div>
+      <Grid container>
+        <Grid item xs={12}>
+          <Typography variant="h2">방 {roomId}</Typography>
+        </Grid>
+        <Grid item xs={12}>
+          <Box height="300px">
+            <MyResponsiveBar data={memoData} total={totalUserNumber} />
+          </Box>
+        </Grid>
+        <Grid item xs={6}>
+          <TypoA text="성공!" />
+          <UserList data={memoData[1].successList} userData={memoUserData} />
+        </Grid>
+        <Grid item xs={6}>
+          <TypoA text="실패" />
+          <UserList data={memoData[1].successList} userData={memoUserData} />
+        </Grid>
+      </Grid>
     </Layout>
   )
 }
