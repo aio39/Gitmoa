@@ -1,57 +1,61 @@
+import axios from 'axios'
 import { useRouter } from 'next/dist/client/router'
 import { useEffect, useState } from 'react'
 import { ClapSpinner } from 'react-spinners-kit'
-import { authTokenVar } from '~/apollo'
+import { authTokenVar, isLoggedInVar } from '~/apollo'
+import { ACCESS_TOKEN } from '~/constants'
+
+type redirectRes = {
+  message: string
+  success: boolean
+  user?: object
+  jwt?: string
+}
 
 export default function redirect() {
   const [error, setError] = useState(false)
   const [loading, setLoading] = useState(true)
   const router = useRouter()
   const { code } = router.query
-  console.log(router.isReady)
+
   useEffect(() => {
-    console.log(code)
-    if (!code) {
+    if (!router.isReady || !code) {
       // router.push('/login')
       return
     }
-
-    ;(async () => {
-      await fetch(`http://localhost:4000/auth/redirect?code=${code}`, {
-        mode: 'cors',
+    console.log('code', code)
+    axios
+      .get<redirectRes>(`/auth/redirect?code=${code}`, {
+        withCredentials: true,
       })
-        .then((res) => {
-          if (res.status === 500) {
-            setError(true)
-            throw new Error('status 500')
-          }
-          return res.json()
-        })
-        .then((json) => {
-          authTokenVar(json.jwt)
-          return json.jwt
-        })
-        .catch((err) => {
-          setError(true)
-          console.error(err)
-        })
-        .finally(() => {
-          setLoading(false)
-        })
-    })()
+      .then(({ data }) => {
+        console.log('axios data', data)
+        if (data.jwt) {
+          authTokenVar(data.jwt)
+          localStorage.setItem(ACCESS_TOKEN, data.jwt)
+          isLoggedInVar(true)
+        }
+      })
+      .catch((err) => {
+        console.log('axios 실패', err)
+        setError(err)
+      })
+      .finally(() => {
+        setLoading(false)
+      })
   }, [code])
 
   useEffect(() => {
     console.log('loading', loading, 'error', error)
     if (!loading) {
       setTimeout(() => {
-        router.push(`/${error ? 'login' : ''}`)
-      }, 300000)
+        router.push(`/${error ? 'login' : 'room'}`)
+      }, 3000)
     }
   }, [loading])
 
   useEffect(() => {
-    router.prefetch('/')
+    router.prefetch('/room')
   }, [])
 
   return (

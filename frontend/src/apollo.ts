@@ -8,10 +8,14 @@ import {
 import { onError } from '@apollo/client/link/error'
 import { setContext } from '@apollo/client/link/context'
 
-export const isLoggedInVar = makeVar(Boolean(false))
-export const authTokenVar = makeVar(
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbiI6Imdob19KOEdnMHB3eUZOd1o3V2VpNXBwVG1UWG04U01lUXQxM2dEUW4iLCJpZCI6IjY4MzQ4MDcwIiwiaWF0IjoxNjI3OTg2Mjg3LCJleHAiOjE2Mjg1OTEwODd9.AumU4MA9mWswD3GVfbtK3rJtj8HJtVk6FjZHWbKSuPI'
-)
+// let token
+// if (typeof window !== undefined) {
+//   token =
+//   console.log('get access token', token)
+// }
+
+export const isLoggedInVar = makeVar(false)
+export const authTokenVar = makeVar<string>(null)
 const httpLink = createHttpLink({
   uri: 'http://localhost:4000/graphql',
 })

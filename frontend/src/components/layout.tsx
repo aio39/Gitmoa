@@ -24,7 +24,12 @@ import Link from 'next/link'
 import HomeIcon from '@material-ui/icons/Home'
 import AddIcon from '@material-ui/icons/Add'
 import AccountBoxIcon from '@material-ui/icons/AccountBox'
-import { Container } from '@material-ui/core'
+import { Button, Container } from '@material-ui/core'
+import { useMe } from '~/hooks/useMe'
+import CustomModal from './CustomModal'
+import GithubLoginDiv from './GihhubLoginDiv'
+import { authTokenVar, isLoggedInVar } from '~/apollo'
+import axios from 'axios'
 const navList: [string, string, React.ReactElement?][] = [
   ['/', '홈화면', <HomeIcon key={1} />],
   ['/room', 'Room', <AddIcon key={2} />],
@@ -88,9 +93,21 @@ export default function Layout(props: Props) {
   const classes = useStyles()
   const theme = useTheme()
   const [mobileOpen, setMobileOpen] = React.useState(false)
+  const { data } = useMe()
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen)
+  }
+
+  const axiosTest = async () => {
+    axios
+      .get('/')
+      .then((res) => {
+        console.log('axios test', res)
+      })
+      .catch((err) => {
+        console.log('axios test err', err)
+      })
   }
 
   const drawer = (
@@ -142,6 +159,16 @@ export default function Layout(props: Props) {
           </IconButton>
           <Typography variant="h6" noWrap>
             Gitmoa
+          </Typography>
+          <Button color="inherit">
+            <CustomModal>
+              <GithubLoginDiv handleClose />
+            </CustomModal>
+          </Button>
+          <div onClick={axiosTest}>axios 테스트</div>
+          <Typography variant="h5">
+            {isLoggedInVar() ? '음그인' : '로그인안됨'}
+            {authTokenVar() || '없음'}
           </Typography>
         </Toolbar>
       </AppBar>

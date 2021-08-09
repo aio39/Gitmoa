@@ -72,7 +72,6 @@ export default function RoomCreate() {
   const classes = useStyles()
   const {
     handleSubmit,
-    getValues,
     watch,
     control,
     formState: { errors },
@@ -81,7 +80,7 @@ export default function RoomCreate() {
     reValidateMode: 'onBlur',
     resolver: yupResolver(yupCreateRoom),
     defaultValues: {
-      isSecret: false,
+      isSecret: 'false',
       tagNames: [],
       maxNum: 100,
       isCanSearched: true,
@@ -89,17 +88,18 @@ export default function RoomCreate() {
   })
 
   const onSubmit: SubmitHandler<CreateRoomInput> = async (data) => {
-    const { errors } = await createRoomMutation({
+    const { errors, data: result } = await createRoomMutation({
       variables: {
         createRoomInput: { ...data },
       },
     })
     console.log('error', errors)
-
+    console.log('onSubmit', result)
     setIsSubmit((_) => true)
   }
 
   const onCompleted = (data: createRoomMutation) => {
+    console.log('onCompleted', data)
     const {
       createRoom: { ok, roomId, secretLink },
     } = data
@@ -256,7 +256,7 @@ export default function RoomCreate() {
                 <TagSelect control={control} />
               </Grid>
               <Grid item xs={12}>
-                <Button variant="contained" color="primary">
+                <Button type={'submit'} variant="contained" color="primary">
                   Create
                 </Button>
               </Grid>
