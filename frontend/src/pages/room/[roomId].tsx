@@ -2,16 +2,34 @@ import Layout from '../../components/layout'
 import dayjs from 'dayjs'
 import { useRouter } from 'next/router'
 import { useState } from 'react'
+import MyResponsiveBar from '~/components/roomDetailPage/weekendsDataChart'
+import { useMemo } from 'react'
+import { Box } from '@material-ui/core'
 
 const Room = () => {
   const router = useRouter()
   const { roomId } = router.query
 
   const [weekData, setWeekData] = useState([
-    { date: '2021-07-01', success: true, failedList: ['1', '2', '3'] },
-    { date: '2021-07-02', success: true, failedList: [] },
+    {
+      date: '2021-07-01',
+      success: true,
+      failedList: ['1', '2', '3'],
+      successList: ['4'],
+    },
+    {
+      date: '2021-07-02',
+      success: true,
+      failedList: [],
+      successList: ['1', '2', '3', '4'],
+    },
     { date: '2021-07-03', success: false, failedList: ['1', '2', '3', '4'] },
-    { date: '2021-07-04', success: true, failedList: ['1'] },
+    {
+      date: '2021-07-04',
+      success: true,
+      failedList: ['1'],
+      successList: ['2', '3', '4'],
+    },
     { date: '2021-07-05', success: true, failedList: ['1', '2', '3'] },
     { date: '2021-07-06', success: true, failedList: ['1', '2', '3'] },
     { date: '2021-07-07', success: true, failedList: ['1', '2', '3'] },
@@ -26,6 +44,21 @@ const Room = () => {
       { userId: 4, userName: '4번' },
     ],
   })
+
+  const totalUserNumber = useMemo(() => roomData.userData.length, [roomData])
+
+  const memoData = useMemo(() => {
+    return weekData.map((day) => ({
+      date: day.date,
+      success: totalUserNumber - day.failedList.length,
+      successColor: 'hsl(77, 70%, 50%)',
+      fail: day.failedList.length,
+      failedList: day.failedList,
+      successList: day.successList,
+    }))
+  }, [weekData, roomData])
+
+  console.log(memoData)
 
   return (
     <Layout>
@@ -59,6 +92,9 @@ const Room = () => {
         <div className="flex-grow">
           <h3 className="text-center">실패리스트</h3>
         </div>
+      </div>
+      <div style={{ height: '500px', width: '100%' }}>
+        <MyResponsiveBar data={memoData} total={totalUserNumber} />
       </div>
     </Layout>
   )

@@ -15,6 +15,7 @@ import {
 } from '@material-ui/core'
 import Layout from '../components/layout'
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore'
+import Link from 'next/link'
 const useStyles = makeStyles({
   roomCard: {
     width: '100%',
@@ -83,39 +84,41 @@ export default function Rooms() {
           <Grid item xs={6} md={3} key={room.name}>
             <Card className={classes.roomCard}>
               <CardActionArea>
-                <CardContent>
-                  <Typography
-                    className={classes.title}
-                    color="textSecondary"
-                    gutterBottom
-                  >
-                    {room.creatorId}
-                  </Typography>
-                  <Typography variant="h5" component="h2">
-                    {room.name}
-                  </Typography>
-                  <Typography className={classes.pos} color="textSecondary">
-                    adjective
-                  </Typography>
-                  <Typography variant="body2" component="p">
-                    well meaning and kindly.
-                    <br />
-                    {'"a benevolent smile"'}
-                  </Typography>
-                  <div>
-                    {room.tags.map((data) => {
-                      return (
-                        <Chip
-                          clickable={false}
-                          key={data.name}
-                          variant="outlined"
-                          avatar={<Avatar alt={data.name} src={data.icon} />}
-                          label={data.name}
-                        />
-                      )
-                    })}
-                  </div>
-                </CardContent>
+                <Link href={`/room/${room.roomNum}`}>
+                  <CardContent>
+                    <Typography
+                      className={classes.title}
+                      color="textSecondary"
+                      gutterBottom
+                    >
+                      {room.creatorId}
+                    </Typography>
+                    <Typography variant="h5" component="h2">
+                      {room.name}
+                    </Typography>
+                    <Typography className={classes.pos} color="textSecondary">
+                      adjective
+                    </Typography>
+                    <Typography variant="body2" component="p">
+                      well meaning and kindly.
+                      <br />
+                      {'"a benevolent smile"'}
+                    </Typography>
+                    <div>
+                      {room.tags.map((data) => {
+                        return (
+                          <Chip
+                            clickable={false}
+                            key={data.name}
+                            variant="outlined"
+                            avatar={<Avatar alt={data.name} src={data.icon} />}
+                            label={data.name}
+                          />
+                        )
+                      })}
+                    </div>
+                  </CardContent>
+                </Link>
               </CardActionArea>
               <CardActions>
                 <Button size="small" color="primary">
