@@ -30,6 +30,7 @@ import CustomModal from './CustomModal'
 import GithubLoginDiv from './GihhubLoginDiv'
 import { authTokenVar, isLoggedInVar } from '~/apollo'
 import axios from 'axios'
+import LogoutDiv from './LogoutDiv'
 const navList: [string, string, React.ReactElement?][] = [
   ['/', '홈화면', <HomeIcon key={1} />],
   ['/room', 'Room', <AddIcon key={2} />],
@@ -162,7 +163,11 @@ export default function Layout(props: Props) {
           </Typography>
           <Button color="inherit">
             <CustomModal>
-              <GithubLoginDiv handleClose />
+              {isLoggedInVar() ? (
+                <GithubLoginDiv handleClose />
+              ) : (
+                <LogoutDiv handleClose />
+              )}
             </CustomModal>
           </Button>
           <div onClick={axiosTest}>axios 테스트</div>

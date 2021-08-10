@@ -14,11 +14,9 @@ import jwt_decode from 'jwt-decode'
 axios.defaults.baseURL = BACKEND_URL
 axios.defaults.withCredentials = true
 
+// get new Access Token
 axios.interceptors.request.use(
   async (config) => {
-    console.log('axios interceipor!')
-    console.log(authTokenVar())
-    console.log(isLoggedInVar())
     if (!isLoggedInVar()) return config
 
     const headers = {
@@ -28,21 +26,33 @@ axios.interceptors.request.use(
     }
 
     const { exp }: { exp: string } = jwt_decode(authTokenVar())
-    const isRemain5m = parseInt(exp) - Date.now() / 1000 > 60 * 5
-    console.log(isRemain5m, exp)
 
+    const remainTime = parseInt(exp) - Date.now() / 1000
+
+    if(remainTime <= 5){
+        isLoggedInVar(false)
+        authTokenVar(null)
+                localStorage.removeItem(ACCESS_TOKEN)
+          alert('로그인 토큰 갱신에 실패하였습니다.')
+
+    }
+
+    const isRemain5m = remainTime > 60 * 5
     if (!isRemain5m) {
       const { data } = await axios
-        .create()
-        .get('/auth/refresh', {
-          headers,
-        })
-        .catch((err) => {
-          console.log(err)
+      .create()
+      .get('/auth/refresh', {
+        headers,
+      })
+      .catch((err) => {
+        isLoggedInVar(false)
+        authTokenVar(null)
+        localStorage.removeItem(ACCESS_TOKEN)
+          alert('로그인 토큰 갱신에 실패하였습니다.')
+          console.error(err)
           throw new Error('is Remain request Error')
         })
       authTokenVar(data.jwt)
-
       localStorage.setItem(ACCESS_TOKEN, data.jwt)
     }
 
