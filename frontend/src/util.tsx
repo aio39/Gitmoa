@@ -1,4 +1,7 @@
+import { useRouter } from 'next/router'
 import React from 'react'
+import { authTokenVar, isLoggedInVar } from './apollo'
+import { ACCESS_TOKEN } from './constants'
 
 export function addPropsToReactElement(element, props) {
   if (React.isValidElement(element)) {
@@ -14,4 +17,12 @@ export function addPropsToChildren(children, props) {
   return children.map((childElement) =>
     addPropsToReactElement(childElement, props)
   )
+}
+
+export function resetLoginData(): void {
+  localStorage.removeItem(ACCESS_TOKEN)
+  isLoggedInVar(false)
+  authTokenVar(null)
+
+  return null
 }

@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import AppBar from '@material-ui/core/AppBar'
 import CssBaseline from '@material-ui/core/CssBaseline'
 import Divider from '@material-ui/core/Divider'
@@ -24,13 +24,16 @@ import Link from 'next/link'
 import HomeIcon from '@material-ui/icons/Home'
 import AddIcon from '@material-ui/icons/Add'
 import AccountBoxIcon from '@material-ui/icons/AccountBox'
-import { Button, Container } from '@material-ui/core'
+import { Badge, Button, Container, Menu, MenuItem } from '@material-ui/core'
 import { useMe } from '~/hooks/useMe'
 import CustomModal from './CustomModal'
 import GithubLoginDiv from './GihhubLoginDiv'
 import { authTokenVar, isLoggedInVar } from '~/apollo'
 import axios from 'axios'
 import LogoutDiv from './LogoutDiv'
+import { AccountCircle } from '@material-ui/icons'
+import useAnchor from '~/hooks/useAnchor'
+import DevLoginStatusViewer from './DevLoginStatusViewer'
 const navList: [string, string, React.ReactElement?][] = [
   ['/', '홈화면', <HomeIcon key={1} />],
   ['/room', 'Room', <AddIcon key={2} />],
@@ -77,6 +80,9 @@ const useStyles = makeStyles((theme: Theme) =>
       flexShrink: 1,
       padding: theme.spacing(3),
     },
+    grow: {
+      flexGrow: 1,
+    },
   })
 )
 
@@ -87,28 +93,19 @@ interface Props {
    */
   children: React.ReactNode
   window?: () => Window
+  isSearch?: boolean
 }
 
 export default function Layout(props: Props) {
-  const { window, children } = props
+  const { window, children, isSearch } = props
   const classes = useStyles()
   const theme = useTheme()
-  const [mobileOpen, setMobileOpen] = React.useState(false)
+  const [mobileOpen, setMobileOpen] = useState(false)
+  const [anchorEl, handleMenu, handleClose] = useAnchor()
   const { data } = useMe()
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen)
-  }
-
-  const axiosTest = async () => {
-    axios
-      .get('/')
-      .then((res) => {
-        console.log('axios test', res)
-      })
-      .catch((err) => {
-        console.log('axios test err', err)
-      })
   }
 
   const drawer = (
@@ -161,20 +158,23 @@ export default function Layout(props: Props) {
           <Typography variant="h6" noWrap>
             Gitmoa
           </Typography>
-          <Button color="inherit">
-            <CustomModal>
-              {isLoggedInVar() ? (
-                <GithubLoginDiv handleClose />
-              ) : (
-                <LogoutDiv handleClose />
-              )}
-            </CustomModal>
-          </Button>
-          <div onClick={axiosTest}>axios 테스트</div>
-          <Typography variant="h5">
-            {isLoggedInVar() ? '음그인' : '로그인안됨'}
-            {authTokenVar() || '없음'}
-          </Typography>
+          <div className={classes.grow}></div>
+          {!isLoggedInVar() && (
+            <div>
+              <IconButton aria-label="show 4 new mails" color="inherit">
+                <Badge badgeContent={4} color="secondary">
+                  <MailIcon />
+                </Badge>
+              </IconButton>
+            </div>
+          )}
+          <CustomModal text={isLoggedInVar() ? 'Logout' : 'Login'}>
+            {isLoggedInVar() ? (
+              <LogoutDiv handleClose />
+            ) : (
+              <GithubLoginDiv handleClose />
+            )}
+          </CustomModal>
         </Toolbar>
       </AppBar>
       <div className={classes.root}>
@@ -213,6 +213,7 @@ export default function Layout(props: Props) {
         </nav>
         <Container className={classes.content}>{children}</Container>
       </div>
+      {process.env.NODE_ENV === 'development' && <DevLoginStatusViewer />}
     </>
   )
 }

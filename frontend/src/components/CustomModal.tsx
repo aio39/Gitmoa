@@ -3,11 +3,15 @@ import { makeStyles, Theme, createStyles } from '@material-ui/core/styles'
 import Modal from '@material-ui/core/Modal'
 import Backdrop from '@material-ui/core/Backdrop'
 import Fade from '@material-ui/core/Fade'
-import { Paper } from '@material-ui/core'
+import { IconButton, Paper } from '@material-ui/core'
 import { addPropsToChildren } from '~/util'
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
+    button: {
+      borderRadius: '0.5rem',
+      color: 'white',
+    },
     modal: {
       display: 'flex',
       alignItems: 'center',
@@ -22,7 +26,7 @@ const useStyles = makeStyles((theme: Theme) =>
   })
 )
 
-const CustomModal = ({ children }) => {
+const CustomModal = ({ children, text }) => {
   const classes = useStyles()
   const [open, setOpen] = React.useState(false)
   const handleOpen = () => {
@@ -33,10 +37,10 @@ const CustomModal = ({ children }) => {
   }
 
   return (
-    <>
-      <button type="button" onClick={handleOpen}>
-        react-transition-group
-      </button>
+    <div>
+      <IconButton type="button" onClick={handleOpen} className={classes.button}>
+        {text}
+      </IconButton>
       <Modal
         aria-labelledby="transition-modal-title"
         aria-describedby="transition-modal-description"
@@ -50,16 +54,10 @@ const CustomModal = ({ children }) => {
         }}
       >
         <Fade in={open}>
-          {/* <div className={classes.paper}>
-            <h2 id="transition-modal-title">Transition modal</h2>
-            <p id="transition-modal-description">
-              react-transition-group animates me.
-            </p>
-          </div> */}
           <Paper>{addPropsToChildren(children, { handleClose })}</Paper>
         </Fade>
       </Modal>
-    </>
+    </div>
   )
 }
 

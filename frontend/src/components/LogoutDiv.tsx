@@ -1,6 +1,8 @@
 import { Box, Button, Link, makeStyles, Typography } from '@material-ui/core'
+import { useRouter } from 'next/router'
 import React from 'react'
 import { GoMarkGithub } from 'react-icons/go'
+import { resetLoginData } from '~/util'
 
 const useStyles = makeStyles({
   root: {
@@ -10,7 +12,7 @@ const useStyles = makeStyles({
     alignItems: 'center',
     padding: '3rem',
     '& > *:not(:last-child)': {
-      marginBottom: '1rem',
+      marginBottom: '2rem',
     },
     '& h1': {
       fontFamily: 'fantasy',
@@ -30,25 +32,34 @@ const useStyles = makeStyles({
         marginRight: '0.5rem',
       },
     },
+    '& .buttonWrapper': {
+      width: '100%',
+      justifyContent: 'center',
+      display: 'flex',
+      gap: '1rem',
+    },
   },
 })
 
 const GithubLoginDiv = ({ handleClose }) => {
   const classes = useStyles()
+  const router = useRouter()
 
   return (
     <div className={classes.root}>
-      <Typography variant="h1">Gitmoa</Typography>
-      <Typography variant="h4">Github Oauth로 로그인합니다.</Typography>
-      <Box>
-        <Link href="http://localhost:4000/auth/">
-          <Button aria-label="Github Login Button" className="github">
-            <GoMarkGithub />
-            Login with GitHub
-          </Button>
-        </Link>
+      <Typography variant="h4">로그아웃 하시겠습니까?.</Typography>
+      <div className="buttonWrapper">
         <Button
-          className="cancel"
+          color="primary"
+          variant="contained"
+          onClick={(e) => {
+            resetLoginData()
+            router.push('/')
+          }}
+        >
+          Ok, Logout
+        </Button>
+        <Button
           variant="contained"
           color="secondary"
           size="small"
@@ -56,7 +67,7 @@ const GithubLoginDiv = ({ handleClose }) => {
         >
           close
         </Button>
-      </Box>
+      </div>
     </div>
   )
 }
