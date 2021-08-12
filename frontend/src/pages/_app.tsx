@@ -9,7 +9,7 @@ import CssBaseline from '@material-ui/core/CssBaseline'
 import theme from '~/material/theme'
 import axios from 'axios'
 import { ACCESS_TOKEN, BACKEND_URL } from '~/constants'
-import jwt_decode from 'jwt-decode'
+import checkJWT from '~/checkJWTExpire'
 
 axios.defaults.baseURL = BACKEND_URL
 axios.defaults.withCredentials = true
@@ -25,29 +25,27 @@ axios.interceptors.request.use(
       'Content-Type': 'application/json',
     }
 
-    const { exp }: { exp: string } = jwt_decode(authTokenVar())
+    const { isValid, isLeft } = checkJWT
+      .create({ time: '10m' })
+      .check(authTokenVar())
 
-    const remainTime = parseInt(exp) - Date.now() / 1000
-
-    if(remainTime <= 5){
-        isLoggedInVar(false)
-        authTokenVar(null)
-                localStorage.removeItem(ACCESS_TOKEN)
-          alert('로그인 토큰 갱신에 실패하였습니다.')
-
+    if (!isValid) {
+      isLoggedInVar(false)
+      authTokenVar(null)
+      localStorage.removeItem(ACCESS_TOKEN)
+      alert('로그인 토큰 갱신에 실패하였습니다.')
     }
 
-    const isRemain5m = remainTime > 60 * 5
-    if (!isRemain5m) {
+    if (!isLeft) {
       const { data } = await axios
-      .create()
-      .get('/auth/refresh', {
-        headers,
-      })
-      .catch((err) => {
-        isLoggedInVar(false)
-        authTokenVar(null)
-        localStorage.removeItem(ACCESS_TOKEN)
+        .create()
+        .get('/auth/refresh', {
+          headers,
+        })
+        .catch((err) => {
+          isLoggedInVar(false)
+          authTokenVar(null)
+          localStorage.removeItem(ACCESS_TOKEN)
           alert('로그인 토큰 갱신에 실패하였습니다.')
           console.error(err)
           throw new Error('is Remain request Error')
