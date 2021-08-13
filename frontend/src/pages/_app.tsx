@@ -9,8 +9,8 @@ import CssBaseline from '@material-ui/core/CssBaseline'
 import theme from '~/material/theme'
 import axios from 'axios'
 import { ACCESS_TOKEN, BACKEND_URL } from '~/constants'
+import { removeLoginData, updateLoginStatus } from '~/util'
 import checkJWT from '~/checkJWTExpire'
-
 axios.defaults.baseURL = BACKEND_URL
 axios.defaults.withCredentials = true
 
@@ -25,27 +25,22 @@ axios.interceptors.request.use(
       'Content-Type': 'application/json',
     }
 
-    const { isValid, isLeft } = checkJWT
-      .create({ time: '10m' })
+    const [isNotExpired, isNotOverTime] = checkJWT
+      .create({ remainTime: '280s' })
       .check(authTokenVar())
 
-    if (!isValid) {
-      isLoggedInVar(false)
-      authTokenVar(null)
-      localStorage.removeItem(ACCESS_TOKEN)
-      alert('로그인 토큰 갱신에 실패하였습니다.')
+    if (!isNotExpired) {
+      removeLoginData()
+      alert('로그인 토큰이 만료되어 로그아웃 되었습니다.')
     }
 
-    if (!isLeft) {
+    if (!isNotOverTime) {
       const { data } = await axios
         .create()
         .get('/auth/refresh', {
           headers,
         })
         .catch((err) => {
-          isLoggedInVar(false)
-          authTokenVar(null)
-          localStorage.removeItem(ACCESS_TOKEN)
           alert('로그인 토큰 갱신에 실패하였습니다.')
           console.error(err)
           throw new Error('is Remain request Error')
@@ -64,9 +59,7 @@ axios.interceptors.request.use(
 
 const App: FC<AppProps> = ({ Component, pageProps }: AppProps) => {
   React.useEffect(() => {
-    authTokenVar(localStorage.getItem(ACCESS_TOKEN))
-    isLoggedInVar(localStorage.getItem(ACCESS_TOKEN) ? true : false)
-    // Remove the server-side injected CSS.
+    updateLoginStatus()
     const jssStyles = document.querySelector('#jss-server-side')
     if (jssStyles) {
       jssStyles.parentElement.removeChild(jssStyles)

@@ -1,16 +1,23 @@
 type time = `${number}${unit}`
 
 interface config {
-  time: time
-  expUnit: string
+  remainTime: time
+  expUnit: keyof typeof unit
   expName: string
 }
 
+interface Payload {}
+
 const defaultConfig: config = {
-  time: '5m',
+  remainTime: '5m',
   expUnit: 's',
   expName: 'exp',
 }
+
+type isNotExpired = boolean
+type isLeft = boolean
+
+type CheckReturn = [isNotExpired: isNotExpired, isLeft: isLeft]
 
 enum unit {
   s = 's',
@@ -24,7 +31,7 @@ enum unit {
 }
 
 type keyUnitValueNumber = {
-  [index in unit]?: number
+  [index in unit]: number
 }
 
 const unitToSecond: keyUnitValueNumber = {
@@ -34,6 +41,8 @@ const unitToSecond: keyUnitValueNumber = {
   M: 60,
   h: 3600,
   H: 3600,
+  d: 86400,
+  D: 86400,
 }
 
 class CheckJWT {
@@ -46,21 +55,22 @@ class CheckJWT {
     this.defaultConfig = { ...this.defaultConfig, ...config }
   }
 
-  private static parse(token: string): JSON | null {
-    try {
-      return JSON.parse(atob(token.split('.')[1]))
-    } catch (e) {
-      return null
-    }
+  private static getTokenPayload(token: string): any {
+    return JSON.parse(atob(token.split('.')[1]))
   }
 
-  private calcLimitTime(): number {
-    const [num, unit] = this.defaultConfig.time.match(/[a-zA-Z]+|[0-9]+/g)
+  private getUpperSecond(): number {
+    const [num, unit] = this.defaultConfig.remainTime.match(
+      /[a-zA-Z]+|[0-9]+/g
+    ) as [string, unit]
+
     return parseInt(num) * unitToSecond[unit]
   }
 
-  private getExp(token: string): number {
-    const exp = parseInt(CheckJWT.parse(token)[this.defaultConfig.expName])
+  private getTokenExp(token: string): number {
+    const exp = parseInt(
+      CheckJWT.getTokenPayload(token)[this.defaultConfig.expName]
+    )
     return exp * unitToSecond[this.defaultConfig.expUnit]
   }
   private getTimeNow(): number {
@@ -71,22 +81,22 @@ class CheckJWT {
   private checkIsNotTimeOut(
     tokenExpTime: number,
     nowTime: number,
-    remainTime = 0
+    upperSecond = 0
   ): boolean {
-    const targetTime = tokenExpTime - remainTime
+    const targetTime = tokenExpTime - upperSecond
     if (targetTime - nowTime >= 1) return true
     return false
   }
 
-  private checkValid(token: string): boolean {
-    return this.checkIsNotTimeOut(this.getExp(token), this.getTimeNow())
+  private checkIsOverTokenExp(token: string): boolean {
+    return this.checkIsNotTimeOut(this.getTokenExp(token), this.getTimeNow())
   }
 
-  private checkRemain(token: string): boolean {
+  private checkIsOverLimitTime(token: string): boolean {
     return this.checkIsNotTimeOut(
-      this.getExp(token),
+      this.getTokenExp(token),
       this.getTimeNow(),
-      this.calcLimitTime()
+      this.getUpperSecond()
     )
   }
 
@@ -95,10 +105,13 @@ class CheckJWT {
     return checkJwt
   }
 
-  check(token: string): { isValid: boolean; isLeft: boolean } {
-    const isValid = this.checkValid(token)
-    const isLeft = this.checkRemain(token)
-    return { isValid, isLeft }
+  check(token: string | null): CheckReturn {
+    if (!token) return [false, false]
+    const isNotExpired = this.checkIsOverTokenExp(token)
+    const isNotOverTime = isNotExpired
+      ? this.checkIsOverLimitTime(token)
+      : false
+    return [isNotExpired, isNotOverTime]
   }
 }
 

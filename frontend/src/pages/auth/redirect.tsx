@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react'
 import { ClapSpinner } from 'react-spinners-kit'
 import { authTokenVar, isLoggedInVar } from '~/apollo'
 import { ACCESS_TOKEN } from '~/constants'
+import { removeLoginData, setLoggedIn } from '~/util'
 
 const useStyles = makeStyles({
   root: {
@@ -76,17 +77,13 @@ export default function redirect() {
       })
       .then(({ data }) => {
         if (data.jwt) {
-          authTokenVar(data.jwt)
-          localStorage.setItem(ACCESS_TOKEN, data.jwt)
-          isLoggedInVar(true)
+          setLoggedIn(data.jwt)
         }
       })
       .catch((err) => {
         console.error('axios 실패', err)
         setError(true)
-        authTokenVar(null)
-        isLoggedInVar(false)
-        localStorage.removeItem(ACCESS_TOKEN)
+        removeLoginData()
       })
       .finally(() => {
         setLoading(false)
