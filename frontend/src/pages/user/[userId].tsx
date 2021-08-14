@@ -4,7 +4,7 @@ import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 import RoomWeekendBar from '~/components/roomDetailPage/weekendsDataChart'
 import { useMemo } from 'react'
-import { Box, Grid, Typography } from '@material-ui/core'
+import { Box, Grid, InputBase, Typography } from '@material-ui/core'
 import UserList from '~/components/roomDetailPage/UserList'
 import { FC } from 'react'
 import { gql, useLazyQuery, useQuery } from '@apollo/client'
@@ -47,25 +47,28 @@ const UserPage = () => {
   const router = useRouter()
   const { data: userData } = useMe()
   const { userId } = router.query
-  const input: GetUserDayStatsInput = {
+  const [input, setInput] = useState<GetUserDayStatsInput>({
     userId: parseInt(userId as string),
-    from: dayjs().format('YYYY-MM-DD'),
-    to: dayjs().subtract(14, 'day').format('YYYY-MM-DD'),
-  }
+    from: dayjs().subtract(14, 'day').format('YYYY-MM-DD'),
+    to: dayjs().format('YYYY-MM-DD'),
+  })
 
-  const [getUserStatsData, { data: statsData, loading, refetch }] =
-    useLazyQuery<getUserDayStatsQuery, getUserDayStatsQueryVariables>(
-      USER_DAY_STATE_QUERY,
-      {
-        variables: {
-          input,
-        },
-      }
-    )
+  const [getUserStatsData, { data: statsData, loading, error }] = useLazyQuery<
+    getUserDayStatsQuery,
+    getUserDayStatsQueryVariables
+  >(USER_DAY_STATE_QUERY, {})
 
   useEffect(() => {
-    router.isReady && getUserStatsData()
+    if (router.isReady) {
+      setInput((prev) => {
+        const newInput = { ...prev, userId: parseInt(userId as string) }
+        getUserStatsData({ variables: { input: newInput } })
+        return newInput
+      })
+    }
   }, [userId])
+
+  console.log(error)
 
   return (
     <Layout>
@@ -73,7 +76,11 @@ const UserPage = () => {
         <Grid item xs={12}>
           <Typography variant="h2"> User - {userId}</Typography>
         </Grid>
-        <WeekendPicker input={input} />
+        <WeekendPicker
+          input={input}
+          setInput={setInput}
+          refetch={getUserStatsData}
+        />
         {!statsData || loading ? (
           <div>로딩중</div>
         ) : (
