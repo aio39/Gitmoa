@@ -7,29 +7,21 @@ import React, {
   useState,
 } from 'react'
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore'
+import isSameOrAfter from 'dayjs/plugin/isSameOrAfter'
 import dayjs, { Dayjs } from 'dayjs'
 import Grid from '@material-ui/core/Grid'
 import DayjsUtils from '@date-io/dayjs'
 import {
   MuiPickersUtilsProvider,
-  KeyboardTimePicker,
   KeyboardDatePicker,
 } from '@material-ui/pickers'
 import { GetUserDayStatsInput } from '~/__generated__/globalTypes'
-import { dateToDayjs, dayjsToDate } from '~/util'
-import { useCallback } from 'react'
-import {
-  ApolloQueryResult,
-  QueryLazyOptions,
-  useLazyQuery,
-} from '@apollo/client'
-import {
-  getUserDayStatsQueryVariables,
-  getUserDayStatsQuery,
-} from '~/__generated__/getUserDayStatsQuery'
-import { USER_DAY_STATE_QUERY } from '~/pages/user/[userId]'
+import { QueryLazyOptions } from '@apollo/client'
+import { getUserDayStatsQueryVariables } from '~/__generated__/getUserDayStatsQuery'
+import useMediaQuery from '@material-ui/core/useMediaQuery'
 
 dayjs.extend(isSameOrBefore)
+dayjs.extend(isSameOrAfter)
 
 interface Props {
   input: GetUserDayStatsInput
@@ -37,15 +29,14 @@ interface Props {
   refetch: (options?: QueryLazyOptions<getUserDayStatsQueryVariables>) => void
 }
 
+const MAX_RANGE = 14
+
 const WeekendPicker: FC<Props> = ({ input, setInput, refetch }) => {
+  const matches = useMediaQuery('(min-width:600px)')
+  const pickerType = matches ? 'inline' : 'dialog'
   const skipInitial = useRef<boolean>(false)
   const [fromDate, setFromDate] = useState(dayjs(input.from))
   const [toDate, setToDate] = useState(dayjs(input.to))
-
-  // const [getUserStatsData, {}] = useLazyQuery<
-  //   getUserDayStatsQuery,
-  //   getUserDayStatsQueryVariables
-  // >(USER_DAY_STATE_QUERY, {})
 
   useEffect(() => {
     if (skipInitial.current) {
@@ -58,56 +49,59 @@ const WeekendPicker: FC<Props> = ({ input, setInput, refetch }) => {
           return newInput
         })
       }
-
       setInputAndRefetch()
     } else {
       skipInitial.current = true
     }
   }, [fromDate, toDate])
 
-  const handleFromDateChange = (fromDate: Dayjs | null) => {
-    if (!fromDate) return
+  const handleFromDateChange = (newFromDate: Dayjs | null) => {
+    if (!newFromDate) return
+    if (
+      newFromDate.isSameOrAfter(toDate, 'day') ||
+      newFromDate.isSameOrBefore(toDate.subtract(MAX_RANGE, 'day'))
+    ) {
+      setToDate(newFromDate.add(MAX_RANGE, 'day'))
+    }
 
-    setFromDate(fromDate)
+    setFromDate(newFromDate)
   }
 
   const handleToDateChange = (newToDate: Dayjs | null) => {
     if (!newToDate) return
-    if (newToDate.isSameOrBefore(fromDate, 'day')) {
-      setFromDate(newToDate.subtract(14, 'day'))
+    if (
+      newToDate.isSameOrBefore(fromDate, 'day') ||
+      newToDate.isSameOrAfter(fromDate.add(MAX_RANGE, 'day'))
+    ) {
+      setFromDate(newToDate.subtract(MAX_RANGE, 'day'))
     }
 
     setToDate(newToDate)
-    console.log(newToDate)
   }
-  console.log(input)
 
   return (
     <MuiPickersUtilsProvider utils={DayjsUtils}>
       <Grid container justifyContent="space-around">
         <KeyboardDatePicker
-          disableToolbar
-          variant="inline"
-          format="MM/DD/YYYY"
+          format="YYYY/MM/DD"
+          // autoOk
+          variant={pickerType}
           margin="normal"
-          id="date-picker-inline"
-          label="Date picker inline"
           value={fromDate}
           onChange={handleFromDateChange}
-          KeyboardButtonProps={{
-            'aria-label': 'change date',
+          onAccept={(date) => {
+            console.log(date, 'onAccept')
+          }}
+          onClose={() => {
+            console.log('onClose')
           }}
         />
         <KeyboardDatePicker
+          format="YYYY/MM/DD"
           margin="normal"
-          id="date-picker-dialog"
-          label="Date picker dialog"
-          format="MM/DD/YYYY"
+          variant={pickerType}
           value={toDate}
           onChange={handleToDateChange}
-          KeyboardButtonProps={{
-            'aria-label': 'change date',
-          }}
         />
       </Grid>
     </MuiPickersUtilsProvider>
