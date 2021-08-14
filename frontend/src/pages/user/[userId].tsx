@@ -68,7 +68,29 @@ const UserPage = () => {
     }
   }, [userId])
 
-  console.log(error)
+  const modifiedDayData = useMemo(() => {
+    const dayStats = statsData?.getUserDayStats?.dayStats
+    // if (!dayStats || dayStats.length === 0) return null
+    if (!dayStats) return null
+    const diffDay = dayjs(input.to).diff(input.from, 'day')
+    let dayStatsIdx = 0
+    let nextInputDate = input.from
+    const newData = [...Array(diffDay + 1)].map((_, idx) => {
+      let data = null
+      if (dayStats[dayStatsIdx]?.date === nextInputDate) {
+        data = dayStats[dayStatsIdx]
+        dayStatsIdx += 1
+      } else {
+        data = {
+          date: nextInputDate,
+        }
+      }
+      nextInputDate = dayjs(nextInputDate).add(1, 'day').format('YYYY-MM-DD')
+      return data
+    })
+
+    return newData
+  }, [statsData])
 
   return (
     <Layout>
@@ -81,12 +103,12 @@ const UserPage = () => {
           setInput={setInput}
           refetch={getUserStatsData}
         />
-        {!statsData || loading ? (
+        {!modifiedDayData || loading ? (
           <div>로딩중</div>
         ) : (
           <Grid item xs={12}>
             <Box height="500px">
-              <UserNivoBar dayData={statsData.getUserDayStats.dayStats} />
+              <UserNivoBar dayData={modifiedDayData} />
             </Box>
           </Grid>
         )}
