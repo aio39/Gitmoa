@@ -14,7 +14,18 @@ export interface CreateRoomInput {
   isCanSearched?: boolean | null;
   maxNum?: number | null;
   password?: string | null;
-  tagNames?: string[] | null;
+  tags?: TagInput[] | null;
+}
+
+export interface GetUserDayStatsInput {
+  userId: number;
+  from: string;
+  to: string;
+}
+
+export interface TagInput {
+  name: string;
+  icon?: string | null;
 }
 
 //==============================================================
