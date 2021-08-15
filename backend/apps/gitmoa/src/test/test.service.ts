@@ -4,6 +4,10 @@ import { UpdateTestDto } from './dto/update-test.dto';
 
 @Injectable()
 export class TestService {
+  userSync() {
+    return null;
+  }
+
   create(createTestDto: CreateTestDto) {
     return 'This action adds a new test';
   }
