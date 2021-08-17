@@ -21512,18 +21512,6 @@ export type UserInfoQueryVariables = Exact<{
 
 export type UserInfoQuery = { __typename?: 'Query', user?: Maybe<{ __typename?: 'User', contributionsCollection: { __typename?: 'ContributionsCollection', pullRequestContributions: { __typename?: 'CreatedPullRequestContributionConnection', totalCount: number, edges?: Maybe<Array<Maybe<{ __typename: 'CreatedPullRequestContributionEdge', cursor: string }>>>, nodes?: Maybe<Array<Maybe<{ __typename: 'CreatedPullRequestContribution', pullRequest: { __typename?: 'PullRequest', updatedAt: any, id: string, repository: { __typename?: 'Repository', name: string } } }>>> }, issueContributions: { __typename?: 'CreatedIssueContributionConnection', totalCount: number, edges?: Maybe<Array<Maybe<{ __typename: 'CreatedIssueContributionEdge', cursor: string }>>>, nodes?: Maybe<Array<Maybe<{ __typename: 'CreatedIssueContribution', issue: { __typename?: 'Issue', updatedAt: any, authorAssociation: CommentAuthorAssociation, id: string, state: IssueState, title: string, author?: Maybe<{ __typename?: 'Bot', resourcePath: any } | { __typename?: 'EnterpriseUserAccount', resourcePath: any } | { __typename?: 'Mannequin', resourcePath: any } | { __typename?: 'Organization', resourcePath: any } | { __typename?: 'User', resourcePath: any }>, repository: { __typename?: 'Repository', name: string } }, user: { __typename?: 'User', id: string } }>>> }, commitContributionsByRepository: Array<{ __typename?: 'CommitContributionsByRepository', repository: { __typename?: 'Repository', name: string, languages?: Maybe<{ __typename?: 'LanguageConnection', edges?: Maybe<Array<Maybe<{ __typename?: 'LanguageEdge', size: number, node: { __typename?: 'Language', color?: Maybe<string>, name: string } }>>> }>, ref?: Maybe<{ __typename?: 'Ref', target?: Maybe<{ __typename: 'Blob' } | { __typename: 'Commit', history: { __typename: 'CommitHistoryConnection', edges?: Maybe<Array<Maybe<{ __typename: 'CommitEdge', cursor: string }>>>, nodes?: Maybe<Array<Maybe<{ __typename: 'Commit', oid: any, id: string, abbreviatedOid: string, authoredByCommitter: boolean, committedDate: any, message: string }>>> } } | { __typename: 'Tag' } | { __typename: 'Tree' }> }> } }> } }> };
 
-export type CursorQueryQueryVariables = Exact<{
-  login: Scalars['String'];
-  fromDate: Scalars['DateTime'];
-  toDate: Scalars['DateTime'];
-  first: Scalars['Int'];
-  issueCursor: Scalars['String'];
-  prCursor: Scalars['String'];
-}>;
-
-
-export type CursorQueryQuery = { __typename?: 'Query', user?: Maybe<{ __typename?: 'User', contributionsCollection: { __typename?: 'ContributionsCollection', pullRequestContributions: { __typename?: 'CreatedPullRequestContributionConnection', totalCount: number, edges?: Maybe<Array<Maybe<{ __typename: 'CreatedPullRequestContributionEdge', cursor: string }>>>, nodes?: Maybe<Array<Maybe<{ __typename: 'CreatedPullRequestContribution', pullRequest: { __typename?: 'PullRequest', updatedAt: any, id: string, repository: { __typename?: 'Repository', name: string } } }>>> }, issueContributions: { __typename?: 'CreatedIssueContributionConnection', totalCount: number, edges?: Maybe<Array<Maybe<{ __typename: 'CreatedIssueContributionEdge', cursor: string }>>>, nodes?: Maybe<Array<Maybe<{ __typename: 'CreatedIssueContribution', issue: { __typename?: 'Issue', updatedAt: any, authorAssociation: CommentAuthorAssociation, id: string, state: IssueState, title: string, author?: Maybe<{ __typename?: 'Bot', resourcePath: any } | { __typename?: 'EnterpriseUserAccount', resourcePath: any } | { __typename?: 'Mannequin', resourcePath: any } | { __typename?: 'Organization', resourcePath: any } | { __typename?: 'User', resourcePath: any }>, repository: { __typename?: 'Repository', name: string } }, user: { __typename?: 'User', id: string } }>>> } } }> };
-
 export type RepoInfoQueryVariables = Exact<{
   login: Scalars['String'];
   untilDate?: Maybe<Scalars['GitTimestamp']>;
@@ -21535,6 +21523,18 @@ export type RepoInfoQueryVariables = Exact<{
 
 
 export type RepoInfoQuery = { __typename?: 'Query', repository?: Maybe<{ __typename?: 'Repository', name: string, ref?: Maybe<{ __typename?: 'Ref', target?: Maybe<{ __typename?: 'Blob' } | { __typename?: 'Commit', history: { __typename: 'CommitHistoryConnection', edges?: Maybe<Array<Maybe<{ __typename?: 'CommitEdge', cursor: string }>>>, nodes?: Maybe<Array<Maybe<{ __typename?: 'Commit', oid: any, committedDate: any }>>> } } | { __typename?: 'Tag' } | { __typename?: 'Tree' }> }> }> };
+
+export type CursorQueryQueryVariables = Exact<{
+  login: Scalars['String'];
+  fromDate: Scalars['DateTime'];
+  toDate: Scalars['DateTime'];
+  first: Scalars['Int'];
+  issueCursor: Scalars['String'];
+  prCursor: Scalars['String'];
+}>;
+
+
+export type CursorQueryQuery = { __typename?: 'Query', user?: Maybe<{ __typename?: 'User', contributionsCollection: { __typename?: 'ContributionsCollection', pullRequestContributions: { __typename?: 'CreatedPullRequestContributionConnection', totalCount: number, edges?: Maybe<Array<Maybe<{ __typename: 'CreatedPullRequestContributionEdge', cursor: string }>>>, nodes?: Maybe<Array<Maybe<{ __typename: 'CreatedPullRequestContribution', pullRequest: { __typename?: 'PullRequest', updatedAt: any, id: string, repository: { __typename?: 'Repository', name: string } } }>>> }, issueContributions: { __typename?: 'CreatedIssueContributionConnection', totalCount: number, edges?: Maybe<Array<Maybe<{ __typename: 'CreatedIssueContributionEdge', cursor: string }>>>, nodes?: Maybe<Array<Maybe<{ __typename: 'CreatedIssueContribution', issue: { __typename?: 'Issue', updatedAt: any, authorAssociation: CommentAuthorAssociation, id: string, state: IssueState, title: string, author?: Maybe<{ __typename?: 'Bot', resourcePath: any } | { __typename?: 'EnterpriseUserAccount', resourcePath: any } | { __typename?: 'Mannequin', resourcePath: any } | { __typename?: 'Organization', resourcePath: any } | { __typename?: 'User', resourcePath: any }>, repository: { __typename?: 'Repository', name: string } }, user: { __typename?: 'User', id: string } }>>> } } }> };
 
 
 export const UserInfoDocument = gql`
@@ -21625,6 +21625,35 @@ export const UserInfoDocument = gql`
   }
 }
     `;
+export const RepoInfoDocument = gql`
+    query repoInfo($login: String!, $untilDate: GitTimestamp, $sinceDate: GitTimestamp, $first: Int!, $repoCursor: String!, $repoName: String!) {
+  repository(name: $repoName, owner: $login) {
+    name
+    ref(qualifiedName: "main") {
+      target {
+        ... on Commit {
+          history(
+            first: $first
+            after: $repoCursor
+            since: $sinceDate
+            until: $untilDate
+            author: {id: "MDQ6VXNlcjY4MzQ4MDcw"}
+          ) {
+            __typename
+            edges {
+              cursor
+            }
+            nodes {
+              oid
+              committedDate
+            }
+          }
+        }
+      }
+    }
+  }
+}
+    `;
 export const CursorQueryDocument = gql`
     query cursorQuery($login: String!, $fromDate: DateTime!, $toDate: DateTime!, $first: Int!, $issueCursor: String!, $prCursor: String!) {
   user(login: $login) {
@@ -21676,35 +21705,6 @@ export const CursorQueryDocument = gql`
   }
 }
     `;
-export const RepoInfoDocument = gql`
-    query repoInfo($login: String!, $untilDate: GitTimestamp, $sinceDate: GitTimestamp, $first: Int!, $repoCursor: String!, $repoName: String!) {
-  repository(name: $repoName, owner: $login) {
-    name
-    ref(qualifiedName: "main") {
-      target {
-        ... on Commit {
-          history(
-            first: $first
-            after: $repoCursor
-            since: $sinceDate
-            until: $untilDate
-            author: {id: "MDQ6VXNlcjY4MzQ4MDcw"}
-          ) {
-            __typename
-            edges {
-              cursor
-            }
-            nodes {
-              oid
-              committedDate
-            }
-          }
-        }
-      }
-    }
-  }
-}
-    `;
 
 export type SdkFunctionWrapper = <T>(action: (requestHeaders?:Record<string, string>) => Promise<T>, operationName: string) => Promise<T>;
 
@@ -21716,11 +21716,11 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     userInfo(variables: UserInfoQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<UserInfoQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<UserInfoQuery>(UserInfoDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'userInfo');
     },
-    cursorQuery(variables: CursorQueryQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<CursorQueryQuery> {
-      return withWrapper((wrappedRequestHeaders) => client.request<CursorQueryQuery>(CursorQueryDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'cursorQuery');
-    },
     repoInfo(variables: RepoInfoQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<RepoInfoQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<RepoInfoQuery>(RepoInfoDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'repoInfo');
+    },
+    cursorQuery(variables: CursorQueryQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<CursorQueryQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<CursorQueryQuery>(CursorQueryDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'cursorQuery');
     }
   };
 }

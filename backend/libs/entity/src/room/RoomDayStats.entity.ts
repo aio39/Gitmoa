@@ -7,14 +7,17 @@ import { Column, Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
 @Entity({ name: EntityName.RoomDayStats })
 @ObjectType()
 export class RoomDayStats {
+  @PrimaryColumn()
+  date_room_id: string;
+
   @ManyToOne(() => Room, { cascade: ['insert', 'update'], onUpdate: 'CASCADE' })
   @JoinColumn({ name: 'fk_room_id' })
   Room: Room;
 
-  @PrimaryColumn('int')
+  @Column('int')
   fk_room_id: number;
 
-  @PrimaryColumn('date')
+  @Column('date')
   date: string;
 
   @Field(Int)

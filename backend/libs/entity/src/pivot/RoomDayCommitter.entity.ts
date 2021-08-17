@@ -8,19 +8,19 @@ import { Column, Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
 @Entity({ name: EntityName.RoomDayCommitter })
 @ObjectType()
 export class RoomDayCommitter {
+  @PrimaryColumn()
+  date_room_id: string;
+
   @ManyToOne(() => RoomDayStats)
-  @JoinColumn([
-    { name: 'fk_room_id', referencedColumnName: 'fk_room_id' },
-    { name: 'date', referencedColumnName: 'date' },
-  ])
+  @JoinColumn({ name: 'fk_rds' })
   RoomDayStats: RoomDayStats;
 
   @Field(Int)
-  @PrimaryColumn('Int')
-  fk_room_id: number;
+  @Column('int')
+  room_id: number;
 
-  @PrimaryColumn('date')
-  date!: string;
+  @Column('date')
+  date: string;
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'fk_user_id' })

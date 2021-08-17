@@ -140,6 +140,7 @@ export class TestController {
       // TODO 으어어 이거 나중에 사람 늘어나는거 어떻게 처리?
       const newRD = new RoomDayStats();
       newRD.isAllCommit = day.total === foundRoom.participants.length;
+      newRD.date_room_id = day.date + '-' + foundRoom.id;
       Object.assign(newRD, day);
       return newRD;
       // return day;
