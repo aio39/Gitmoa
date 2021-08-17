@@ -1,30 +1,30 @@
 import { Field, InputType, ObjectType } from '@nestjs/graphql';
 import { IsString, Length } from 'class-validator';
 import { Column, Entity, ManyToMany } from 'typeorm';
-import { CoreEntity } from './core.entity';
-import { Room } from './room.entity';
+import { CoreEntity } from '../core.entity';
+import { Room } from './Room.entity';
 
 @InputType('TagInputType', { isAbstract: true })
 @ObjectType()
 @Entity()
 export class Tag extends CoreEntity {
-  @Column({ unique: true })
   @Field(() => String)
+  @Column({ unique: true })
   @IsString()
   @Length(5)
   name: string;
 
-  @Column({ nullable: true })
   @Field(() => String, { nullable: true })
+  @Column({ nullable: true })
   @IsString()
-  icon: string;
+  icon?: string;
 
-  @Field(() => String)
+  @Field(() => String, { nullable: true })
   @Column({ unique: true })
   @IsString()
-  slug: string;
+  slug?: string;
 
-  @ManyToMany(() => Room, (room) => room.tags)
   @Field(() => [Room])
-  rooms: Room[];
+  @ManyToMany(() => Room, (room) => room.tags)
+  rooms?: Room[];
 }

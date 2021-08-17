@@ -3,9 +3,9 @@ import { Tag } from './tag.entity';
 
 @EntityRepository(Tag)
 export class TagRepository extends Repository<Tag> {
-  async getOrCreate(names: string[]): Promise<Tag[]> {
+  async getOrCreate(tags: Tag[]): Promise<Tag[]> {
     return await Promise.all(
-      names.map(async (name) => {
+      tags.map(async ({ name }) => {
         const tagName = name.trim().toLowerCase();
         const tagSlug = tagName.replace(/ /g, '-');
         let tag = await this.findOne({ slug: tagSlug });
