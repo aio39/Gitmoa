@@ -1,11 +1,13 @@
+import { Room, User, UserContribution, UserDayStats } from '@lib/entity';
 import { Module } from '@nestjs/common';
-import { TestService } from './test.service';
-import { TestController } from './test.controller';
-import { User, UserContribution, UserDayStats } from '@lib/entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { TestController } from './test.controller';
+import { TestService } from './test.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User, UserContribution, UserDayStats])],
+  imports: [
+    TypeOrmModule.forFeature([User, UserContribution, UserDayStats, Room]),
+  ],
   controllers: [TestController],
   providers: [TestService],
 })

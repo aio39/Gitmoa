@@ -1,237 +1,177 @@
 import {
-  getSdk,
-  SdkFunctionWrapper,
-  Repository,
-} from './../../../../gqlType/graphql';
-import { Controller, All, Get } from '@nestjs/common';
-import { TestService } from './test.service';
-import { GraphQLClient, gql } from 'graphql-request';
-import {
   ContributionType,
+  Room,
+  RoomDayStats,
   User,
   UserContribution,
   UserDayStats,
 } from '@lib/entity';
-import * as dayjs from 'dayjs';
+import { All, Controller, Get } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository as RepositoryTypeOrm } from 'typeorm';
-import { from } from 'rxjs';
+import * as dayjs from 'dayjs';
+import { GraphQLClient } from 'graphql-request';
+import * as redis from 'redis';
+import { Repository } from 'typeorm';
+import { getSdk, SdkFunctionWrapper } from './../../../../gqlType/graphql';
+import { TestService } from './test.service';
 
 const lambdaVar = {
   user: 'aio39',
 };
 
-const query = gql`
-  query userInfo(
-    $login: String!
-    $fromDate: DateTime!
-    $toDate: DateTime!
-    $untilDate: GitTimestamp
-    $sinceDate: GitTimestamp
-    $first: Int!
-  ) {
-    user(login: $login) {
-      contributionsCollection(from: $fromDate, to: $toDate) {
-        pullRequestContributions(first: $first) {
-          totalCount
-          edges {
-            __typename
-            cursor
-          }
-          nodes {
-            __typename
-            pullRequest {
-              updatedAt
-              id
-              repository {
-                name
-              }
-            }
-          }
-        }
-
-        issueContributions(first: $first) {
-          totalCount
-          edges {
-            __typename
-            cursor
-          }
-          nodes {
-            __typename
-            issue {
-              updatedAt
-              authorAssociation
-              id
-              state
-              author {
-                resourcePath
-              }
-              title
-              repository {
-                name
-              }
-            }
-            user {
-              id
-            }
-          }
-        }
-
-        commitContributionsByRepository {
-          repository {
-            languages(
-              first: $first
-              orderBy: { field: SIZE, direction: DESC }
-            ) {
-              edges {
-                size
-                node {
-                  color
-                  name
-                }
-              }
-            }
-            name
-            ref(qualifiedName: "main") {
-              target {
-                __typename
-                ... on Commit {
-                  history(first: $first, since: $sinceDate, until: $untilDate) {
-                    __typename
-                    edges {
-                      cursor
-                      __typename
-                    }
-                    nodes {
-                      __typename
-                      oid
-                      id
-                      abbreviatedOid
-                      authoredByCommitter
-                      committedDate
-                      message
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-`;
-
-const cursorQuery = gql`
-  query cursorQuery(
-    $login: String!
-    $fromDate: DateTime!
-    $toDate: DateTime!
-    $first: Int!
-    $issueCursor: String!
-    $prCursor: String!
-  ) {
-    user(login: $login) {
-      contributionsCollection(from: $fromDate, to: $toDate) {
-        pullRequestContributions(first: $first, after: $issueCursor) {
-          totalCount
-          edges {
-            cursor
-            __typename
-          }
-          nodes {
-            __typename
-            pullRequest {
-              updatedAt
-              id
-              repository {
-                name
-              }
-            }
-          }
-        }
-
-        issueContributions(first: $first, after: $prCursor) {
-          totalCount
-          edges {
-            cursor
-            __typename
-          }
-          nodes {
-            __typename
-            issue {
-              updatedAt
-              authorAssociation
-              id
-              state
-              author {
-                resourcePath
-              }
-              title
-              repository {
-                name
-              }
-            }
-            user {
-              id
-            }
-          }
-        }
-      }
-    }
-  }
-`;
-
-const repoQuery = gql`
-  query repoInfo(
-    $login: String!
-    $untilDate: GitTimestamp
-    $sinceDate: GitTimestamp
-    $first: Int!
-    $repoCursor: String!
-    $repoName: String!
-  ) {
-    repository(name: $repoName, owner: $login) {
-      name
-      ref(qualifiedName: "main") {
-        target {
-          ... on Commit {
-            history(
-              first: $first
-              after: $repoCursor
-              since: $sinceDate
-              until: $untilDate
-              author: { id: "MDQ6VXNlcjY4MzQ4MDcw" }
-            ) {
-              __typename
-              edges {
-                cursor
-              }
-              nodes {
-                oid
-                committedDate
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-`;
+const dateToMysqlFormatString = (date: Date = new Date()): string => {
+  return dayjs(date).format('YYYY-MM-DD HH:mm:ss');
+};
 
 @Controller('test')
 export class TestController {
   constructor(
     private readonly testService: TestService,
-    @InjectRepository(User) private readonly users: RepositoryTypeOrm<User>,
+    @InjectRepository(User) private readonly users: Repository<User>,
     @InjectRepository(UserContribution)
-    private readonly userContributions: RepositoryTypeOrm<UserContribution>,
+    private readonly userContributions: Repository<UserContribution>,
     @InjectRepository(UserDayStats)
-    private readonly userDayStats: RepositoryTypeOrm<UserDayStats>,
+    private readonly userDayStats: Repository<UserDayStats>,
+    @InjectRepository(Room)
+    private readonly rooms: Repository<Room>,
   ) {}
 
-  @All()
-  async create() {
+  @Get('rs')
+  async roomSync() {
+    const redisClient = redis.createClient({
+      host: process.env.REDIS_HOST,
+      port: +process.env.REDIS_PORT,
+      password: process.env.REDIS_PASSWORD,
+    });
+    // const fromDate = '2021-04-01T15:00:00Z';
+    const fromDate = '2021-01-01';
+    // const toDate = '2021-06-30T15:00:00Z';
+    const toDate = '2021-06-30';
+    const roomId = 9;
+    // 방에 포함된 모든 유저 데이터를 가져오고 ,
+
+    const foundRoom = await this.rooms.findOne(roomId, {
+      relations: ['participants'], //'participants.userDayStats'
+    });
+    const updatedUserList: User[] = [];
+    const notUpdatedUserList: User[] = [];
+    // 최근 1시간내에 업데이트 되지 않은 리스트 A를 추려와서
+    foundRoom.participants.forEach((user) => {
+      const isUpdatedInLast1H = dayjs(user.lastSyncedAt).isAfter(
+        dayjs().subtract(1, 'day'),
+      );
+      if (isUpdatedInLast1H) {
+        updatedUserList.push(user);
+      } else {
+        notUpdatedUserList.push(user);
+      }
+    });
+    // redis를 체크해서 이미 동기화 요청이 들어왔는지 확인하고
+    //  안 하고 있다면 요청을 보내서 데이터를 받아옴 / await TASK A
+    type UserId = User['id'];
+    const nowInRedisList: UserId[] = [];
+    const nowNotInRedisList: UserId[] = [];
+    await Promise.all(
+      notUpdatedUserList.map(async (user) => {
+        const isExist = await redisClient.exists('us' + user.id);
+        if (isExist) {
+          nowInRedisList.push(user.id);
+        } else {
+          nowNotInRedisList.push(user.id);
+        }
+        return;
+      }),
+    );
+    const requestUserSync: User[] = await Promise.all(
+      nowNotInRedisList.map((userId) => {
+        redisClient.set('us' + userId, '1');
+        return this.userSync();
+      }),
+    );
+
+    //  TASK A가 끝나고 나서, Redis를 다시 체크해서 아직 안 끝났다면 직접 UserSync .
+    const finishedRedisList: UserId[] = [];
+    const maybeFailedList: UserId[] = [];
+
+    await Promise.all(
+      nowNotInRedisList.map(async (id) => {
+        const isExist = await redisClient.exists('us' + id);
+        if (isExist) {
+          // 아직도 안 끝날걸 보아 sync 에러가 생긴거 같으니 직접 sync 요청
+          maybeFailedList.push(id);
+        } else {
+          // 다른 곳에서 신청한 sync가 끝났으니 db에서 가져온다청
+          // finishedRedisList.push(id);
+        }
+        return;
+      }),
+    );
+
+    await Promise.all(
+      maybeFailedList.map((id) => {
+        return this.roomSync();
+      }),
+    );
+
+    const userList = foundRoom.participants.map((user) => user.id);
+
+    type DayStatus = Pick<
+      RoomDayStats,
+      'date' | 'total' | 'commit' | 'issue' | 'pullRequest' | 'isAllCommit'
+    >;
+    const dayStats: DayStatus[] = await this.userDayStats
+      .createQueryBuilder('stats')
+      .select([
+        'stats.date as date',
+        'sum(stats.total) as total',
+        'sum(stats.commit) as commit',
+        'sum(stats.pullRequest) as pullRequest',
+        'sum(stats.issue) as issue',
+      ])
+      // .where('stats.fk_user_id in :user_list', { user_list: userList })
+      // .where('stats.date BETWEEN :from AND :to  ', {
+      //   from: fromDate,
+      //   to: toDate,
+      // })
+      .groupBy('date')
+      .getRawMany();
+
+    const roomDayStatsInstance = dayStats.map((day, idx) => {
+      // TODO 으어어 이거 나중에 사람 늘어나는거 어떻게 처리?
+      const newRD = new RoomDayStats();
+      newRD.isAllCommit = day.total === foundRoom.participants.length;
+      Object.assign(newRD, day);
+      return newRD;
+      // return day;
+    });
+
+    foundRoom.RoomDayStats = roomDayStatsInstance;
+    // try {
+    //   const result = await this.rooms.update(foundRoom.id, {
+    //     RoomDayStats: roomDayStatsInstance,
+    //   });
+    // } catch (error) {
+    //   console.log(error);
+    // }
+    try {
+      await this.rooms.save(foundRoom);
+    } catch (error) {
+      console.log(error);
+    }
+
+    // console.log(result);
+    // await this.rooms.findOne(roomId, {
+    //   relations: ['participants'],
+    //   where: { 'participants.id': In(maybeFailedList) },
+    // });
+
+    // DB에 저장하기
+
+    // 완료되면 SQS Finish 요청을 보냄.
+  }
+
+  @All('us')
+  async userSync() {
     const accessToken = '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';
     const userId: number = +'68348070';
     const endpoint = 'https://api.github.com/graphql';
@@ -240,9 +180,19 @@ export class TestController {
     const toDate = '2021-06-30T15:00:00Z';
     const first = 10;
 
-    const user = await this.users.findOne(userId);
+    const redisClient = redis.createClient({
+      host: process.env.REDIS_HOST,
+      port: +process.env.REDIS_PORT,
+      password: process.env.REDIS_PASSWORD,
+    });
+
+    redisClient.get(`us${userId}`, (err, reply) => {
+      console.log(reply);
+    });
+
+    const foundUser = await this.users.findOne(userId);
     const variables = {
-      login: user.username,
+      login: foundUser.username,
       fromDate,
       sinceDate: fromDate,
       toDate,
@@ -252,7 +202,7 @@ export class TestController {
 
     const graphQLClient = new GraphQLClient(endpoint, {
       headers: {
-        authorization: `Bearer ${user.accessToken}`,
+        authorization: `Bearer ${foundUser.accessToken}`,
       },
     });
 
@@ -261,19 +211,13 @@ export class TestController {
     ): Promise<T> => {
       const startTime = Date.now();
       const result = await action();
-      console.log('request duration (ms)', Date.now() - startTime);
+      console.log(`request duration (ms)`, Date.now() - startTime);
       return result;
     };
 
     const sdk = getSdk(graphQLClient, clientTimingWrapper);
     const data = await sdk.userInfo(variables);
     console.log(data);
-
-    // const data = await graphQLClient
-    //   .request(query, variables)
-    //   .catch((error) => {
-    //     console.log(error);
-    //   });
 
     const {
       commitContributionsByRepository,
@@ -298,11 +242,7 @@ export class TestController {
         issueCursor,
         prCursor,
       });
-      // graphQLClient
-      //   .request(query, { ...variables, issueCursor, prCursor })
-      //   .catch((error) => {
-      //     console.log(error);
-      //   });
+
       const {
         pullRequestContributions: nextPR,
         issueContributions: nextIssue,
@@ -318,9 +258,6 @@ export class TestController {
       remainPRTotal -= first;
     }
 
-    const dateToMysqlFormatString = (date: Date): string =>
-      dayjs(date).format('YYYY-MM-DD HH:mm:ss');
-
     const filteredCommitCB = await Promise.all(
       commitContributionsByRepository.map(async (a) => {
         let count = 1;
@@ -329,7 +266,6 @@ export class TestController {
           const { repository } = await sdk.repoInfo({
             ...variables,
             repoName,
-            // authorId: 'aio39',
             repoCursor,
           });
           if (repository.ref.target.__typename !== 'Commit') return;
@@ -365,7 +301,7 @@ export class TestController {
           id: b.oid,
           type: ContributionType.Commit,
           date: dateToMysqlFormatString(b.committedDate),
-          User: user,
+          User: foundUser,
         }));
       }),
     );
@@ -382,7 +318,7 @@ export class TestController {
         id: pr.pullRequest.id,
         type: ContributionType.PullRequest,
         date: dateToMysqlFormatString(pr.pullRequest.updatedAt),
-        User: user,
+        User: foundUser,
       }));
 
     const FlatFilteredIssueCB = issueContributions.nodes.map<UserContribution>(
@@ -391,7 +327,7 @@ export class TestController {
         id: pr.issue.id,
         type: ContributionType.Issue,
         date: dateToMysqlFormatString(pr.issue.updatedAt),
-        User: user,
+        User: foundUser,
       }),
     );
 
@@ -406,7 +342,7 @@ export class TestController {
 
       if (!userDayStats.hasOwnProperty(date)) {
         userDayStats[date] = {
-          User: user,
+          User: foundUser,
           total: 0,
           date,
           commit: 0,
@@ -436,9 +372,19 @@ export class TestController {
 
     try {
       await this.userContributions.save(CBInstances, { chunk: 100 });
-      await this.userDayStats.save(Object.values(userDayStats));
+      foundUser.userDayStats = await this.userDayStats.save(
+        Object.values(userDayStats),
+      );
     } catch (error) {
       console.log(error);
     }
+    redisClient.del(`us${userId}`);
+    foundUser.lastSyncedAt = new Date();
+    try {
+      await this.users.save(foundUser);
+    } catch (error) {
+      console.error(error);
+    }
+    return foundUser;
   }
 }
