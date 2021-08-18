@@ -1,4 +1,11 @@
 import {
+  ReceiveMessageCommand,
+  SendMessageBatchCommand,
+  SendMessageBatchCommandInput,
+  SendMessageBatchRequestEntry,
+  SQSClient,
+} from '@aws-sdk/client-sqs';
+import {
   ContributionType,
   Room,
   RoomDayStats,
@@ -14,7 +21,6 @@ import * as redis from 'redis';
 import { Repository } from 'typeorm';
 import { getSdk, SdkFunctionWrapper } from './../../../../gqlType/graphql';
 import { TestService } from './test.service';
-
 const lambdaVar = {
   user: 'aio39',
 };
@@ -23,6 +29,20 @@ const dateToMysqlFormatString = (date: Date = new Date()): string => {
   return dayjs(date).format('YYYY-MM-DD HH:mm:ss');
 };
 
+const splitArrayByNumber = <T>(array: T[], num: number) => {
+  let i;
+  const j = array.length;
+  const result = [];
+  for (i = 0; i < j; i += num) {
+    result.push(array.slice(i, i + num));
+  }
+  return result;
+};
+
+const REGION = 'ap-northeast-2';
+const QUEUE_NAME = 'gitmoa_update_room_queue';
+const QUERY_URL =
+  'https://sqs.ap-northeast-2.amazonaws.com/324744157557/gitmoa_update_room_queue';
 @Controller('test')
 export class TestController {
   constructor(
@@ -35,6 +55,100 @@ export class TestController {
     @InjectRepository(Room)
     private readonly rooms: Repository<Room>,
   ) {}
+
+  @Get('co')
+  test() {
+    // 생산 영향령
+    //
+    const tc = [3, 3, 8, 1, 0, 6, 1, 5];
+
+    tc.sort();
+
+    let ans = 0;
+    let i = 0;
+    // const tc = [0,1,3,5,6];
+    while (i <= tc[tc.length - 1]) {
+      const c = tc.findIndex((e) => e >= i);
+
+      const a = tc.length - c >= i;
+      const b = tc.slice(0, c - 1)?.reduce((a, c) => a + c, 0) <= i;
+      if (a && b) {
+        ans = i;
+      }
+
+      i += 1;
+    }
+
+    console.log(ans);
+
+    return ans;
+  }
+
+  @Get('rsls') // 특정 시간마다 방을 sqs에 올림.
+  async roomSyncLoadToSQS() {
+    const MAX_BATCH = 2;
+    const sqsClient = new SQSClient({ region: REGION });
+    const rooms = await this.rooms.find({ select: ['id'] });
+
+    const splitRooms = splitArrayByNumber(rooms, MAX_BATCH);
+
+    const results = await Promise.all(
+      splitRooms.map((roomsChuck) => {
+        const messageList: SendMessageBatchRequestEntry[] = roomsChuck.map(
+          (room) => ({
+            Id: `${room.id}`,
+            MessageBody: `${room.id} room sync`,
+            MessageAttributes: {
+              roomId: {
+                DataType: 'String',
+                StringValue: `${room.id}`,
+              },
+            },
+          }),
+        );
+        const params: SendMessageBatchCommandInput = {
+          QueueUrl: QUERY_URL,
+          Entries: messageList,
+        };
+        return sqsClient.send(new SendMessageBatchCommand(params));
+      }),
+    );
+    results.map((result) => {
+      console.log(result);
+    });
+  }
+
+  @Get('rqc') // 5분 마다 sqs에 업데이트 해야할 방 있는 지 확인해서, 룸 싱크 함수를 실행
+  async roomUpdateQueueConsumer(): Promise<any> {
+    const sqsClient = new SQSClient({ region: REGION });
+    const params = {
+      AttributeNames: ['SentTimestamp'],
+      MaxNumberOfMessages: 10,
+      MessageAttributeNames: ['All'],
+      QueueUrl: QUERY_URL,
+      VisibilityTimeout: 300,
+      WaitTimeSeconds: 0,
+    };
+    const data = await sqsClient.send(new ReceiveMessageCommand(params));
+    interface ruqcPayload {
+      fromTime: string;
+      toTime: string;
+      isNotify?: boolean;
+      roomId: number;
+      ReceiptHandle: string;
+    }
+
+    const tempLambda = (payload?: ruqcPayload) => {};
+    if (data.$metadata.httpStatusCode === 200 && data.Messages) {
+      data.Messages.forEach((payload) => {
+        console.log(payload.Attributes);
+        console.log(payload.MessageAttributes);
+        tempLambda();
+      });
+    }
+
+    return null;
+  }
 
   @Get('rs')
   async roomSync() {
