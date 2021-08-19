@@ -19,7 +19,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import * as dayjs from 'dayjs';
 import { GraphQLClient } from 'graphql-request';
 import * as redis from 'redis';
-import { Repository } from 'typeorm';
+import { LessThan, Repository } from 'typeorm';
 import { promisify } from 'util';
 import { getSdk, SdkFunctionWrapper } from './../../../../gqlType/graphql';
 import { TestService } from './test.service';
@@ -104,18 +104,18 @@ export class TestController {
     const execTimeISO = dj.set('hour', dj_hour).toISOString();
     const fromTimeISO = dj.subtract(FROM_BEFORE_HOUR, 'hour').toISOString();
 
-    const rooms = await this.rooms
-      .createQueryBuilder('room')
-      .select(['id'])
-      .where('IFNULL(room.lastSyncedAt,0) < :time', {
-        time: dayjs().subtract(30, 'minute').toISOString(),
-      });
-    // const rooms = await this.rooms.find({
-    //   select: ['id'],
-    //   where: {
-    //     lastSyncedAt:   LessThan(dayjs().subtract(30, 'minute').toISOString()),
-    //   },
-    // });
+    // const rooms = await this.rooms
+    //   .createQueryBuilder('room')
+    //   .select(['id'])
+    //   .where('IFNULL(room.lastSyncedAt,0) < :time', {
+    //     time: dayjs().subtract(30, 'minute').toISOString(),
+    //   });
+    const rooms = await this.rooms.find({
+      select: ['id'],
+      where: {
+        lastSyncedAt: LessThan(dayjs().subtract(30, 'minute').toISOString()),
+      },
+    });
 
     const splitRooms = splitArrayByNumber(rooms, MAX_BATCH);
 
@@ -167,7 +167,6 @@ export class TestController {
       WaitTimeSeconds: 0,
     };
     const data = await sqsClient.send(new ReceiveMessageCommand(params));
-
     const tempLambda = () => {};
     if (data.$metadata.httpStatusCode === 200 && data.Messages) {
       data.Messages.forEach((payload) => {

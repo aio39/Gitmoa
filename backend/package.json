@@ -11,7 +11,8 @@
     "format": "prettier --write \"apps/**/*.ts\" \"libs/**/*.ts\"",
     "start": "nest start",
     "start:dev": "cross-env NODE_ENV=dev nest start --watch",
-    "start2:dev": "cross-env NODE_ENV=dev nest start --watch sl-user-sync",
+    "start:webpack": "cross-env NODE_ENV=dev nest start --debug --webpack --watch",
+    "sls:dev": "cross-env NODE_ENV=dev nest start --watch sl-user-sync",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
@@ -90,7 +91,7 @@
     "eslint-plugin-prettier": "^3.4.0",
     "jest": "^27.0.6",
     "prettier": "^2.3.2",
-    "run-script-webpack-plugin": "^0.0.11",
+    "run-script-webpack-plugin": "0.0.11",
     "serverless-dotenv-plugin": "^3.9.0",
     "serverless-plugin-optimize": "^4.2.1-rc.1",
     "serverless-plugin-typescript": "^1.1.9",
@@ -101,7 +102,7 @@
     "ts-node": "^10.0.0",
     "tsconfig-paths": "^3.10.1",
     "typescript": "^4.3.5",
-    "webpack": "^5.44.0",
+    "webpack": "^5.50.0",
     "webpack-node-externals": "^3.0.0"
   },
   "jest": {

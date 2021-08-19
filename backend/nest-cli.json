@@ -18,7 +18,9 @@
       "entryFile": "main",
       "sourceRoot": "apps/gitmoa/src",
       "compilerOptions": {
-        "tsConfigPath": "apps/gitmoa/tsconfig.app.json"
+        "tsConfigPath": "apps/gitmoa/tsconfig.app.json",
+        "webpackConfigPath": "apps/gitmoa/webpack.config.js",
+        "webpack": true
       }
     },
     "sl-user-sync": {
