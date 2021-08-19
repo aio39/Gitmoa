@@ -46,3 +46,4 @@
 // };
 
 export * from './handlerA';
+export * from './roomSyncLoadToSQS';

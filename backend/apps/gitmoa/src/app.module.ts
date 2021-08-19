@@ -7,7 +7,20 @@ import * as Joi from 'joi';
 import { GraphQLModule } from '@nestjs/graphql';
 import { CommonModule } from './common/common.module';
 import { RoomsModule } from './rooms/rooms.module';
-import { User, Tag, Room } from '@lib/entity';
+import {
+  User,
+  UserContribution,
+  UserDayStats,
+  Tag,
+  Room,
+  RoomDayCommitter,
+  RoomDayStats,
+} from '@lib/entity';
+import { TelegrafModule } from 'nestjs-telegraf';
+import { TelegramModule } from 'apps/gitmoa/src/telegram/telegram.module';
+import { APP_INTERCEPTOR } from '@nestjs/core';
+import { DataLoaderInterceptor } from 'apps/gitmoa/src/common/dataloader';
+import { TestModule } from './test/test.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -46,24 +59,48 @@ import { User, Tag, Room } from '@lib/entity';
       database: process.env.DB_NAME,
       synchronize: process.env.NODE_ENV !== 'prod', // TypeOrm의 Entity에 맞춰 실제 DB에 Migration
       logging: process.env.NODE_ENV !== 'prod',
-      entities: [User, Room, Tag],
+      entities: [
+        User,
+        UserContribution,
+        UserDayStats,
+        Tag,
+        Room,
+        RoomDayCommitter,
+        RoomDayStats,
+      ],
     }),
     GraphQLModule.forRoot({
       // installSubscriptionHandlers: true, // NOTE ws 활성화
       autoSchemaFile: true,
+      cors: {
+        origin: 'http://localhost:3000',
+        credentials: true,
+      },
       context: ({ req, connection }) => {
         const TOKEN_KEY = 'x-jwt';
         return {
           token: req ? req.headers[TOKEN_KEY] : connection.context[TOKEN_KEY],
         };
       },
+      debug: true,
     }),
+    // TelegrafModule.forRoot({
+    //   token: process.env.TELEGRAM_BOT_TOKEN,
+    //   include: [TelegramModule],
+    // }),
+    // TelegramModule,
     AuthModule,
     UsersModule,
     CommonModule,
     RoomsModule,
+    TestModule,
+  ],
+  providers: [
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: DataLoaderInterceptor,
+    },
   ],
   controllers: [],
-  providers: [],
 })
 export class AppModule {}

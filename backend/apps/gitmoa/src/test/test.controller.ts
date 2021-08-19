@@ -1,4 +1,5 @@
 import {
+  MessageAttributeValue,
   ReceiveMessageCommand,
   SendMessageBatchCommand,
   SendMessageBatchCommandInput,
@@ -19,11 +20,19 @@ import * as dayjs from 'dayjs';
 import { GraphQLClient } from 'graphql-request';
 import * as redis from 'redis';
 import { Repository } from 'typeorm';
+import { promisify } from 'util';
 import { getSdk, SdkFunctionWrapper } from './../../../../gqlType/graphql';
 import { TestService } from './test.service';
 const lambdaVar = {
   user: 'aio39',
 };
+
+type roomMessageAttribute = {
+  [key in 'roomId' | 'fromDate' | 'toDate']: MessageAttributeValue;
+};
+interface roomMessage extends SendMessageBatchRequestEntry {
+  MessageAttributes: roomMessageAttribute;
+}
 
 const dateToMysqlFormatString = (date: Date = new Date()): string => {
   return dayjs(date).format('YYYY-MM-DD HH:mm:ss');
@@ -87,21 +96,48 @@ export class TestController {
   @Get('rsls') // 특정 시간마다 방을 sqs에 올림.
   async roomSyncLoadToSQS() {
     const MAX_BATCH = 2;
-    const sqsClient = new SQSClient({ region: REGION });
-    const rooms = await this.rooms.find({ select: ['id'] });
+    const FROM_BEFORE_HOUR = 36;
+    const PASSING_MINUETS = 30;
+
+    const dj = dayjs();
+    const dj_hour = dj.get('hour') + (dj.get('minute') >= 30 ? 1 : 0);
+    const execTimeISO = dj.set('hour', dj_hour).toISOString();
+    const fromTimeISO = dj.subtract(FROM_BEFORE_HOUR, 'hour').toISOString();
+
+    const rooms = await this.rooms
+      .createQueryBuilder('room')
+      .select(['id'])
+      .where('IFNULL(room.lastSyncedAt,0) < :time', {
+        time: dayjs().subtract(30, 'minute').toISOString(),
+      });
+    // const rooms = await this.rooms.find({
+    //   select: ['id'],
+    //   where: {
+    //     lastSyncedAt:   LessThan(dayjs().subtract(30, 'minute').toISOString()),
+    //   },
+    // });
 
     const splitRooms = splitArrayByNumber(rooms, MAX_BATCH);
 
+    const sqsClient = new SQSClient({ region: REGION });
     const results = await Promise.all(
       splitRooms.map((roomsChuck) => {
         const messageList: SendMessageBatchRequestEntry[] = roomsChuck.map(
-          (room) => ({
+          (room): roomMessage => ({
             Id: `${room.id}`,
             MessageBody: `${room.id} room sync`,
             MessageAttributes: {
               roomId: {
                 DataType: 'String',
                 StringValue: `${room.id}`,
+              },
+              fromDate: {
+                DataType: 'String',
+                StringValue: fromTimeISO,
+              },
+              toDate: {
+                DataType: 'String',
+                StringValue: execTimeISO,
               },
             },
           }),
@@ -110,6 +146,7 @@ export class TestController {
           QueueUrl: QUERY_URL,
           Entries: messageList,
         };
+
         return sqsClient.send(new SendMessageBatchCommand(params));
       }),
     );
@@ -130,17 +167,13 @@ export class TestController {
       WaitTimeSeconds: 0,
     };
     const data = await sqsClient.send(new ReceiveMessageCommand(params));
-    interface ruqcPayload {
-      fromTime: string;
-      toTime: string;
-      isNotify?: boolean;
-      roomId: number;
-      ReceiptHandle: string;
-    }
 
-    const tempLambda = (payload?: ruqcPayload) => {};
+    const tempLambda = () => {};
     if (data.$metadata.httpStatusCode === 200 && data.Messages) {
       data.Messages.forEach((payload) => {
+        const MessageAttributes =
+          payload.MessageAttributes as roomMessageAttribute;
+
         console.log(payload.Attributes);
         console.log(payload.MessageAttributes);
         tempLambda();
@@ -185,28 +218,33 @@ export class TestController {
     type UserId = User['id'];
     const nowInRedisList: UserId[] = [];
     const nowNotInRedisList: UserId[] = [];
+    console.time('all a');
     await Promise.all(
-      notUpdatedUserList.map(async (user) => {
-        const isExist = await redisClient.exists('us' + user.id);
+      notUpdatedUserList.map((user): Promise<boolean> => {
+        return promisify(redisClient.exists).bind(redisClient)('us' + user.id);
+      }),
+    ).then((results) => {
+      results.forEach((isExist, idx) => {
+        const user = notUpdatedUserList[idx];
         if (isExist) {
           nowInRedisList.push(user.id);
         } else {
           nowNotInRedisList.push(user.id);
         }
-        return;
-      }),
-    );
+      });
+    });
+    console.timeEnd('all a');
     const requestUserSync: User[] = await Promise.all(
       nowNotInRedisList.map((userId) => {
         redisClient.set('us' + userId, '1');
         return this.userSync();
       }),
     );
-
     //  TASK A가 끝나고 나서, Redis를 다시 체크해서 아직 안 끝났다면 직접 UserSync .
     const finishedRedisList: UserId[] = [];
     const maybeFailedList: UserId[] = [];
 
+    console.time('all b');
     await Promise.all(
       nowNotInRedisList.map(async (id) => {
         const isExist = await redisClient.exists('us' + id);
@@ -220,6 +258,7 @@ export class TestController {
         return;
       }),
     );
+    console.timeEnd('all b');
 
     await Promise.all(
       maybeFailedList.map((id) => {

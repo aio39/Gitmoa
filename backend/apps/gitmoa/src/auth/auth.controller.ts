@@ -25,4 +25,10 @@ export class AuthController {
   jwtTest(@Req() req) {
     return { user: req.user };
   }
+
+  @Get('refresh')
+  @UseGuards(JwtAuthGuard)
+  refresh(@Req() req) {
+    return this.authService.refresh(req);
+  }
 }

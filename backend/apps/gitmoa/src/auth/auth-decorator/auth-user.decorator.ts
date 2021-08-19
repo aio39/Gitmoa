@@ -14,8 +14,8 @@ export const AuthUser = createParamDecorator(
     const gqlContext = GqlExecutionContext.create(context).getContext();
     console.log(gqlContext);
     const user = gqlContext['user'];
-    console.log(gqlContext['Cookies']);
-    console.log(gqlContext['token']);
+    // console.log(gqlContext['Cookies']);
+    // console.log(gqlContext['token']);
     console.log(user);
     return user;
   },

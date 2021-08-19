@@ -65,6 +65,10 @@ export class Room extends CoreEntity {
   @Field(() => String)
   secretLink: string;
 
+  @Column('datetime', { nullable: true })
+  @Field(() => Date)
+  lastSyncedAt?: Date;
+
   @ManyToOne(() => User, { onDelete: 'SET NULL', eager: true })
   @Field(() => User)
   creator: User;

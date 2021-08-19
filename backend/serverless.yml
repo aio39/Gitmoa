@@ -3,10 +3,19 @@ service:
 
 plugins:
   - serverless-offline
+  - serverless-dotenv-plugin
+
+custom:
+  serverless-offline:
+    httpPort: 4001
 
 provider:
   name: aws
   runtime: nodejs12.x
+  asdf: ${env:PORT}
+  environment:
+    NODE_ENV : "dev"
+    TEST: ${env:GITHUB_CLIENT_SECRET}
 
 
 package:
@@ -27,9 +36,9 @@ functions:
       #     method: ANY
       #     path: '{proxy+}'
   main2:
-    handler: dist/apps/sl-user-sync/main.handlerB
+    handler: dist/apps/sl-user-sync/main.roomSyncLoadToSQS
     events:
       - http:
           method: ANY
-          path: /funcB
+          path: /rsl
     

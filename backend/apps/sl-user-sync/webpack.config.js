@@ -6,7 +6,7 @@ module.exports = (options, webpack) => {
   console.log(options);
   return {
     ...options,
-    externals: [],
+    externals: ['class-transformer/storage', 'apollo-server-fastify'],
     output: {
       filename: options.output.filename,
       library: {
