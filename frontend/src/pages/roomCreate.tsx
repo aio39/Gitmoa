@@ -7,7 +7,7 @@ import {
   createRoomMutationVariables,
 } from '~/__generated__/createRoomMutation'
 import { yupResolver } from '@hookform/resolvers/yup'
-import { CreateRoomInput } from '~/__generated__/globalTypes'
+import { CreateRoomInput, TagInput } from '~/__generated__/globalTypes'
 import Autocomplete from '@material-ui/lab/Autocomplete'
 import {
   Avatar,
@@ -27,6 +27,11 @@ import { makeStyles } from '@material-ui/styles'
 import RoomCreateResult from '~/components/RoomCreateResult'
 import { CREATE_ROOM_MUTATION } from '~/gql/mutation'
 import { tagsList } from '~/fakeData'
+
+export type FormCreateRoomInput = Omit<CreateRoomInput, 'tags' | 'isSecret'> & {
+  tagNames: [string]
+  isSecret: 'true' | 'false'
+}
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -56,11 +61,6 @@ const useStyles = makeStyles((theme: Theme) =>
   })
 )
 
-// interface CreateRoomInput {
-//   isSecret?: boolean | null | string
-// }
-
-import { ITag } from '~/fakeData'
 import HFEText from '~/components/text/HookFormErrorText'
 import yupCreateRoom from '~/yup/yup_createRoom'
 import IsSecretRadio from '~/components/pageParts/roomCreate/IsSecretRadio'
@@ -75,7 +75,7 @@ export default function RoomCreate() {
     watch,
     control,
     formState: { errors },
-  } = useForm<CreateRoomInput>({
+  } = useForm<FormCreateRoomInput>({
     mode: 'onChange',
     reValidateMode: 'onBlur',
     resolver: yupResolver(yupCreateRoom),
@@ -87,10 +87,15 @@ export default function RoomCreate() {
     },
   })
 
-  const onSubmit: SubmitHandler<CreateRoomInput> = async (data) => {
+  const onSubmit: SubmitHandler<FormCreateRoomInput> = async ({
+    tagNames,
+    isSecret,
+    ...rest
+  }) => {
+    const tags: TagInput[] = tagNames.map((name) => ({ name }))
     const { errors, data: result } = await createRoomMutation({
       variables: {
-        createRoomInput: { ...data },
+        createRoomInput: { ...rest, tags, isSecret: isSecret === 'true' },
       },
     })
     console.log('error', errors)

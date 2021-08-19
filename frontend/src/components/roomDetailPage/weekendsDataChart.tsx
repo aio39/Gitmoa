@@ -2,7 +2,7 @@
 // yarn add @nivo/core @nivo/bar
 import { List, ListItem, makeStyles, Paper } from '@material-ui/core'
 import { ResponsiveBar } from '@nivo/bar'
-import React from 'react'
+import React, { FC } from 'react'
 import useIdDebounce from '~/hooks/useDebounce'
 // make sure parent container have a defined height when using
 // responsive component, otherwise height will be 0 and
@@ -35,7 +35,7 @@ const ToolTip = (
   )
 }
 
-const RoomWeekendBar = ({ weekData, userData }) => {
+const RoomWeekendBar: FC<any> = ({ weekData, userData }) => {
   const getToolTip = useIdDebounce(ToolTip)
 
   return (

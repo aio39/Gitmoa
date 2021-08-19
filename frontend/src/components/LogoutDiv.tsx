@@ -1,8 +1,7 @@
-import { Box, Button, Link, makeStyles, Typography } from '@material-ui/core'
+import { Button, makeStyles, Typography } from '@material-ui/core'
 import { useRouter } from 'next/router'
 import React from 'react'
-import { GoMarkGithub } from 'react-icons/go'
-import { resetLoginData } from '~/util'
+import { removeLoginData } from '~/util'
 
 const useStyles = makeStyles({
   root: {
@@ -43,7 +42,7 @@ const useStyles = makeStyles({
 
 const GithubLoginDiv = ({ handleClose }) => {
   const classes = useStyles()
-  const router = useRouter()
+  // const router = useRouter()
 
   return (
     <div className={classes.root}>
@@ -53,8 +52,9 @@ const GithubLoginDiv = ({ handleClose }) => {
           color="primary"
           variant="contained"
           onClick={(e) => {
-            resetLoginData()
-            router.push('/')
+            handleClose()
+            removeLoginData()
+            // router.push('/')
           }}
         >
           Ok, Logout

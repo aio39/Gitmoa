@@ -1,9 +1,11 @@
+import { useReactiveVar } from '@apollo/client'
 import { Box, makeStyles } from '@material-ui/core'
 import axios from 'axios'
 import React, { useCallback, useState } from 'react'
 import { FC } from 'react'
 import { authTokenVar, isLoggedInVar } from '~/apollo'
 import { ACCESS_TOKEN } from '~/constants'
+import { useMe } from '~/hooks/useMe'
 
 const useStyles = makeStyles({
   root: {
@@ -23,6 +25,8 @@ const useStyles = makeStyles({
 const DevLoginStatusViewer: FC = () => {
   const classes = useStyles()
   const [axiosResult, setAxiosResult] = useState(null)
+  const isLoggedIn = useReactiveVar(isLoggedInVar)
+  const { data } = useMe()
 
   const axiosTest = useCallback(async () => {
     axios
@@ -45,7 +49,7 @@ const DevLoginStatusViewer: FC = () => {
       bottom="20px"
       right="20px"
     >
-      <div>{isLoggedInVar() ? 'login' : 'not login'}</div>
+      <div>{isLoggedIn ? 'login' : 'not login'}</div>
       <div>{authTokenVar()?.substring(0, 10) || 'not token'}</div>
       <div>
         {(process.browser && localStorage.getItem(ACCESS_TOKEN))
@@ -54,6 +58,12 @@ const DevLoginStatusViewer: FC = () => {
       </div>
       <button onClick={axiosTest}>axios 테스트</button>
       <div>{JSON.stringify(axiosResult)}</div>
+      <div>
+        {data?.findUserMe?.user &&
+          Object.entries(data?.findUserMe?.user).map((a) => (
+            <span key={a[1]}>{a[1]} / </span>
+          ))}
+      </div>
     </Box>
   )
 }

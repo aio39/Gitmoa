@@ -34,6 +34,7 @@ import LogoutDiv from './LogoutDiv'
 import { AccountCircle } from '@material-ui/icons'
 import useAnchor from '~/hooks/useAnchor'
 import DevLoginStatusViewer from './DevLoginStatusViewer'
+import { useReactiveVar } from '@apollo/client'
 const navList: [string, string, React.ReactElement?][] = [
   ['/', '홈화면', <HomeIcon key={1} />],
   ['/room', 'Room', <AddIcon key={2} />],
@@ -103,6 +104,7 @@ export default function Layout(props: Props) {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [anchorEl, handleMenu, handleClose] = useAnchor()
   const { data } = useMe()
+  const isLoggedIn = useReactiveVar(isLoggedInVar)
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen)
@@ -159,7 +161,7 @@ export default function Layout(props: Props) {
             Gitmoa
           </Typography>
           <div className={classes.grow}></div>
-          {!isLoggedInVar() && (
+          {!isLoggedIn && (
             <div>
               <IconButton aria-label="show 4 new mails" color="inherit">
                 <Badge badgeContent={4} color="secondary">
@@ -168,8 +170,8 @@ export default function Layout(props: Props) {
               </IconButton>
             </div>
           )}
-          <CustomModal text={isLoggedInVar() ? 'Logout' : 'Login'}>
-            {isLoggedInVar() ? (
+          <CustomModal text={isLoggedIn ? 'Logout' : 'Login'}>
+            {isLoggedIn ? (
               <LogoutDiv handleClose />
             ) : (
               <GithubLoginDiv handleClose />

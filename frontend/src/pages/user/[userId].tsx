@@ -1,21 +1,17 @@
-import Layout from '../../components/layout'
+import { gql, useLazyQuery } from '@apollo/client'
+import { Box, Grid, Typography } from '@material-ui/core'
 import dayjs from 'dayjs'
 import { useRouter } from 'next/router'
-import { useEffect, useState } from 'react'
-import RoomWeekendBar from '~/components/roomDetailPage/weekendsDataChart'
-import { useMemo } from 'react'
-import { Box, Grid, InputBase, Typography } from '@material-ui/core'
-import UserList from '~/components/roomDetailPage/UserList'
-import { FC } from 'react'
-import { gql, useLazyQuery, useQuery } from '@apollo/client'
+import { FC, useEffect, useMemo, useState } from 'react'
+import UserNivoBar from '~/components/user/UserNivoBar'
+import WeekendPicker from '~/components/weekendPicker'
+import { useMe } from '~/hooks/useMe'
 import {
   getUserDayStatsQuery,
   getUserDayStatsQueryVariables,
 } from '~/__generated__/getUserDayStatsQuery'
-import { useMe } from '~/hooks/useMe'
-import UserNivoBar from '~/components/user/UserNivoBar'
-import WeekendPicker from '~/components/weekendPicker'
 import { GetUserDayStatsInput } from '~/__generated__/globalTypes'
+import Layout from '../../components/layout'
 
 const TypoA: FC<{ text: string }> = ({ text }) => {
   return (

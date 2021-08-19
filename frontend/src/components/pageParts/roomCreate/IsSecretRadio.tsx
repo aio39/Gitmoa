@@ -1,11 +1,12 @@
 import { RadioGroup, Box, Radio, Typography } from '@material-ui/core'
 import React, { FC } from 'react'
 import { Control, useController } from 'react-hook-form'
+import { FormCreateRoomInput } from '~/pages/roomCreate'
 import { CreateRoomInput } from '~/__generated__/globalTypes'
 import SecretOption from './SecretOption'
 
 type IsSecretRadioProps = {
-  control: Control<CreateRoomInput>
+  control: Control<FormCreateRoomInput>
 }
 
 type component = {

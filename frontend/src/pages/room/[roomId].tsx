@@ -98,6 +98,8 @@ const Room = () => {
     return userMap
   }, [roomData])
 
+  
+
   return (
     <Layout>
       <Grid container>
@@ -116,6 +118,7 @@ const Room = () => {
             userData={memoUserData}
           />
         </Grid>
+
         <Grid item xs={6}>
           <TypoA text="실패" />
           <UserList

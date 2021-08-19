@@ -1,10 +1,11 @@
 import { Box, Checkbox, FormControlLabel } from '@material-ui/core'
 import { FC } from 'react'
 import { Control, Controller, useWatch } from 'react-hook-form'
+import { FormCreateRoomInput } from '~/pages/roomCreate'
 import { CreateRoomInput } from '~/__generated__/globalTypes'
 
 type SecretOptionProps = {
-  control: Control<CreateRoomInput>
+  control: Control<FormCreateRoomInput>
 }
 
 const SecretOption: FC<SecretOptionProps> = ({ control }) => {
@@ -14,10 +15,7 @@ const SecretOption: FC<SecretOptionProps> = ({ control }) => {
   })
 
   return (
-    <Box
-      // @ts-ignore
-      display={isSecret === 'true' ? 'block' : 'none'}
-    >
+    <Box display={isSecret === 'true' ? 'block' : 'none'}>
       <div>
         <Controller
           name="isCanSearched"

@@ -4,10 +4,10 @@ import React from 'react'
 import { FC } from 'react'
 import { Control, useController } from 'react-hook-form'
 import { ITag, tagsList } from '~/fakeData'
-import { CreateRoomInput } from '~/__generated__/globalTypes'
+import { FormCreateRoomInput } from '~/pages/roomCreate'
 
 type TagSelect = {
-  control: Control<CreateRoomInput>
+  control: Control<FormCreateRoomInput>
 }
 
 const TagSelect: FC<TagSelect> = ({ control }) => {
