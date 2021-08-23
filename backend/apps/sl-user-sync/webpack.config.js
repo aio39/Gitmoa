@@ -6,6 +6,7 @@ module.exports = (options, webpack) => {
   console.log(options);
   return {
     ...options,
+    devtool: 'eval-cheap-module-source-map',
     externals: ['class-transformer/storage', 'apollo-server-fastify'],
     output: {
       filename: options.output.filename,

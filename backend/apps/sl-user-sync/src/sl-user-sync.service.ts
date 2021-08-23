@@ -9,7 +9,7 @@ import { Room, User, UserContribution, UserDayStats } from '@lib/entity';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as dayjs from 'dayjs';
-import { LessThan, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 
 const lambdaVar = {
   user: 'aio39',
@@ -64,11 +64,12 @@ export class SlUserSyncService {
     const dj_hour = dj.get('hour') + (dj.get('minute') >= 30 ? 1 : 0);
     const execTimeISO = dj.set('hour', dj_hour).toISOString();
     const fromTimeISO = dj.subtract(FROM_BEFORE_HOUR, 'hour').toISOString();
+    const before30mTimeISO = dayjs().subtract(30, 'minute').toISOString();
 
-    const rooms = await this.rooms.find({
-      select: ['id'],
-      where: { lastSyncedAt: LessThan(dayjs().subtract(30, 'minute')) },
-    });
+    const rooms = await this.rooms
+      .createQueryBuilder('r')
+      .where('IFNULL(r.lastSyncedAt,0) < :time', { time: before30mTimeISO })
+      .getMany();
 
     const splitRooms = splitArrayByNumber(rooms, MAX_BATCH);
 
@@ -103,9 +104,9 @@ export class SlUserSyncService {
         return sqsClient.send(new SendMessageBatchCommand(params));
       }),
     );
-    results.map((result) => {
-      console.log(result);
+    const re = results.map((result) => {
+      return result.$metadata.httpStatusCode;
     });
-    return results;
+    return re;
   }
 }

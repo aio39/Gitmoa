@@ -65,34 +65,6 @@ export class TestController {
     private readonly rooms: Repository<Room>,
   ) {}
 
-  @Get('co')
-  test() {
-    // 생산 영향령
-    //
-    const tc = [3, 3, 8, 1, 0, 6, 1, 5];
-
-    tc.sort();
-
-    let ans = 0;
-    let i = 0;
-    // const tc = [0,1,3,5,6];
-    while (i <= tc[tc.length - 1]) {
-      const c = tc.findIndex((e) => e >= i);
-
-      const a = tc.length - c >= i;
-      const b = tc.slice(0, c - 1)?.reduce((a, c) => a + c, 0) <= i;
-      if (a && b) {
-        ans = i;
-      }
-
-      i += 1;
-    }
-
-    console.log(ans);
-
-    return ans;
-  }
-
   @Get('rsls') // 특정 시간마다 방을 sqs에 올림.
   async roomSyncLoadToSQS() {
     const MAX_BATCH = 2;
