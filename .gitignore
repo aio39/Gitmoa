@@ -1,2 +1,7 @@
 backend/.webpack/service/lambda/src/functions/hello/handler.js
 backend/.webpack/service/lambda/src/functions/roomSyncLoadToSQS/handler.js
+backend/.webpack/**/*
+backend/.webpack
+backend/.serverless/**/*
+backend/.build/**/*
+backend/.build

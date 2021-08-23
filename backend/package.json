@@ -41,6 +41,7 @@
     "@types/crypto-js": "^4.0.2",
     "@types/passport": "^1.0.7",
     "@types/redis": "^2.8.31",
+    "@types/serverless": "^1.78.34",
     "@vendia/serverless-express": "^4.3.9",
     "apollo-server-express": "^2.0.0",
     "aws-sdk": "^2.969.0",
