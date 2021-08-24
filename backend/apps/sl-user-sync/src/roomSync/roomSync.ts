@@ -3,7 +3,7 @@ import { SlUserSyncModule } from 'apps/sl-user-sync/src/sl-user-sync.module';
 import { SlUserSyncService } from 'apps/sl-user-sync/src/sl-user-sync.service';
 import { Callback, Context, Handler } from 'aws-lambda';
 
-export const handlerA: Handler = async (
+export const roomSync: Handler = async (
   event: any,
   context: Context,
   callback: Callback,
@@ -21,19 +21,3 @@ export const handlerA: Handler = async (
   // callback(null, user);
   callback(null, JSON.stringify(user));
 };
-
-// export const handlerB: Handler = async (
-//   event: any,
-//   context: Context,
-//   callback: Callback,
-// ) => {
-//   const appContext = await NestFactory.createApplicationContext(
-//     SlUserSyncModule,
-//   );
-//   const appService = appContext.get(SlUserSyncService);
-
-//   return {
-//     body: 'BBBBB',
-//     statusCode: HttpStatus.OK,
-//   };
-// };

@@ -21,7 +21,7 @@ import { SlUserSyncService } from './sl-user-sync.service';
       username: process.env.DB_USERNAME,
       password: process.env.DB_PASSWORD,
       database: process.env.DB_NAME,
-      synchronize: process.env.NODE_ENV !== 'prod', // TypeOrm의 Entity에 맞춰 실제 DB에 Migration
+      synchronize: process.env.NODE_ENV === 'dev', // TypeOrm의 Entity에 맞춰 실제 DB에 Migration
       logging: process.env.NODE_ENV !== 'prod',
       entities: [
         User,

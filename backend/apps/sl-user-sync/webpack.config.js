@@ -3,17 +3,35 @@ module.exports = (options, webpack) => {
     '@nestjs/microservices/microservices-module',
     '@nestjs/websockets/socket-module',
   ];
-  console.log(options);
+  console.log(process.env.NODE_ENV);
+  console.dir(options, { depth: null });
+  // return {
+  //   ...options,
+  //   // devtool: 'eval-cheap-module-source-map',
+  //   externals: [...options.externals, /aws-sdk/],
+
+  //   output: {
+  //     ...options.output,
+  //     library: {
+  //       type: 'commonjs2',
+  //     },
+  //   },
+  // };
   return {
     ...options,
-    devtool: 'eval-cheap-module-source-map',
-    externals: ['class-transformer/storage', 'apollo-server-fastify'],
     output: {
-      filename: options.output.filename,
+      ...options.output,
       library: {
         type: 'commonjs2',
       },
     },
+    // optimization: {
+    //   usedExports: true,
+    //   sideEffects: true,
+    // },
+    externals: ['class-transformer/storage', 'apollo-server-fastify'],
+    devtool: process.env.NODE_ENV === 'prod' ? false : 'source-map',
+    mode: process.env.NODE_ENV === 'prod' ? 'production' : 'development',
     plugins: [
       ...options.plugins,
       new webpack.IgnorePlugin({

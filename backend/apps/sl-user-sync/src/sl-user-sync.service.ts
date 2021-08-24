@@ -67,6 +67,7 @@ export class SlUserSyncService {
   getHello(): Promise<User> {
     return this.users.findOne(12341234);
   }
+  // 전체 방과 유저의 정보를 최신화 하는 함수, 하루에 4번 실행
   async roomSyncLoadToSQS() {
     const MAX_BATCH = 2;
     const FROM_BEFORE_HOUR = 36;
@@ -123,7 +124,7 @@ export class SlUserSyncService {
   }
 
   @Get('rqc') // 5분 마다 sqs에 업데이트 해야할 방 있는 지 확인해서, 룸 싱크 함수를 실행
-  async roomUpdateQueueConsumer(): Promise<any> {
+  async roomSyncConsumer(): Promise<any> {
     const sqsClient = new SQSClient({ region: REGION });
     const params = {
       AttributeNames: ['SentTimestamp'],
@@ -300,15 +301,15 @@ export class SlUserSyncService {
     const toDate = '2021-06-30T15:00:00Z';
     const first = 10;
 
-    const redisClient = redis.createClient({
-      host: process.env.REDIS_HOST,
-      port: +process.env.REDIS_PORT,
-      password: process.env.REDIS_PASSWORD,
-    });
+    // const redisClient = redis.createClient({
+    //   host: process.env.REDIS_HOST,
+    //   port: +process.env.REDIS_PORT,
+    //   password: process.env.REDIS_PASSWORD,
+    // });
 
-    redisClient.get(`us${userId}`, (err, reply) => {
-      console.log(reply);
-    });
+    // redisClient.get(`us${userId}`, (err, reply) => {
+    //   console.log(reply);
+    // });
 
     const foundUser = await this.users.findOne(userId);
     const variables = {
@@ -498,7 +499,7 @@ export class SlUserSyncService {
     } catch (error) {
       console.log(error);
     }
-    redisClient.del(`us${userId}`);
+    // redisClient.del(`us${userId}`);
     foundUser.lastSyncedAt = new Date();
     try {
       await this.users.save(foundUser);
