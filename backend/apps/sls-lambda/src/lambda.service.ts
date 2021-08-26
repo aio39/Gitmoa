@@ -1,5 +1,4 @@
 import {
-  MessageAttributeValue,
   ReceiveMessageCommand,
   SendMessageBatchCommand,
   SendMessageBatchCommandInput,
@@ -14,15 +13,24 @@ import {
   UserContribution,
   UserDayStats,
 } from '@lib/entity';
-import { All, Get, Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { roomSyncEvent } from 'apps/sls-lambda/src/roomSync/type';
+import sls_fn_names from 'apps/sls-lambda/src/sls_const';
+import { userSyncEvent } from 'apps/sls-lambda/src/userSync/type';
+import { Lambda } from 'aws-sdk';
 import * as dayjs from 'dayjs';
 import { GraphQLClient } from 'graphql-request';
 import * as redis from 'redis';
 import { Repository } from 'typeorm';
 import { promisify } from 'util';
 import { getSdk, SdkFunctionWrapper } from './gql_codegen/gh_gql_type';
-import { dateToMysqlFormatString, splitArrayByNumber } from './utils';
+import { roomMessage, roomMessageAttribute } from './roomSyncLoadToSQS/type';
+import {
+  dateToMysqlFormatString,
+  rmUndefinedFields,
+  splitArrayByNumber,
+} from './utils';
 
 const lambdaVar = {
   user: 'aio39',
@@ -30,15 +38,8 @@ const lambdaVar = {
 
 const REGION = process.env.REGION;
 const QUEUE_NAME = 'gitmoa_update_room_queue';
-const QUERY_URL =
+const ROOM_QUERY_URL =
   'https://sqs.ap-northeast-2.amazonaws.com/324744157557/gitmoa_update_room_queue';
-
-type roomMessageAttribute = {
-  [key in 'roomId' | 'fromDate' | 'toDate']: MessageAttributeValue;
-};
-interface roomMessage extends SendMessageBatchRequestEntry {
-  MessageAttributes: roomMessageAttribute;
-}
 
 @Injectable()
 export class LambdaService {
@@ -53,6 +54,7 @@ export class LambdaService {
   ) {}
 
   private readonly logger = new Logger('gitmoa-lambda', { timestamp: true });
+  private readonly sqsClient = new SQSClient({ region: REGION });
 
   getHello(): Promise<User> {
     return this.users.findOne(12341234);
@@ -76,7 +78,6 @@ export class LambdaService {
 
     const splitRooms = splitArrayByNumber(rooms, MAX_BATCH);
 
-    const sqsClient = new SQSClient({ region: REGION });
     const sqsLoadRequests = await Promise.all(
       splitRooms.map((roomsChuck) => {
         const messageList: SendMessageBatchRequestEntry[] = roomsChuck.map(
@@ -100,11 +101,11 @@ export class LambdaService {
           }),
         );
         const params: SendMessageBatchCommandInput = {
-          QueueUrl: QUERY_URL,
+          QueueUrl: ROOM_QUERY_URL,
           Entries: messageList,
         };
 
-        return sqsClient.send(new SendMessageBatchCommand(params));
+        return this.sqsClient.send(new SendMessageBatchCommand(params));
       }),
     );
     const resultHttpStatus = sqsLoadRequests.map((result) => {
@@ -116,47 +117,77 @@ export class LambdaService {
     return resultHttpStatus;
   }
 
-  @Get('rqc') // 5분 마다 sqs에 업데이트 해야할 방 있는 지 확인해서, 룸 싱크 함수를 실행
+  // 5분 마다 sqs에 업데이트 해야할 방 있는 지 확인해서, 룸 싱크 함수를 실행
   async roomSyncConsumer(): Promise<any> {
-    const sqsClient = new SQSClient({ region: REGION });
+    const MAX_BATCH = 10;
     const params = {
       AttributeNames: ['SentTimestamp'],
-      MaxNumberOfMessages: 10,
+      MaxNumberOfMessages: MAX_BATCH,
       MessageAttributeNames: ['All'],
-      QueueUrl: QUERY_URL,
+      QueueUrl: ROOM_QUERY_URL,
       VisibilityTimeout: 300,
       WaitTimeSeconds: 0,
     };
-    const data = await sqsClient.send(new ReceiveMessageCommand(params));
-    // const tempLambda = () => {};
-    if (data.$metadata.httpStatusCode === 200 && data.Messages) {
-      data.Messages.forEach((payload) => {
-        const MessageAttributes =
-          payload.MessageAttributes as roomMessageAttribute;
+    const pulledMSG = await this.sqsClient.send(
+      new ReceiveMessageCommand(params),
+    );
 
-        console.log(payload.Attributes);
-        console.log(payload.MessageAttributes);
-        // tempLambda();
+    // sls offline --stage slocal 일 경우 end point 변경
+    const lambda = new Lambda({
+      ...(process.env.NODE_ENV === 'dev'
+        ? {
+            endpoint: 'http://localhost:3002',
+          }
+        : {}),
+    });
+
+    let result;
+
+    if (pulledMSG.$metadata.httpStatusCode === 200 && pulledMSG.Messages) {
+      pulledMSG.Messages.forEach((payload) => {
+        const {
+          roomId: { StringValue: roomId },
+          fromDate: { StringValue: fromDate },
+          toDate: { StringValue: toDate },
+        } = payload.MessageAttributes as roomMessageAttribute; // TODO undefined 오류 안 나나?
+
+        const roomSyncPayload: roomSyncEvent = rmUndefinedFields({
+          roomId: parseInt(roomId),
+          fromDate,
+          toDate,
+          ReceiptHandle: payload.ReceiptHandle,
+        });
+
+        lambda
+          .invoke({
+            FunctionName: sls_fn_names.ROOM_SYNC,
+            InvocationType: 'RequestResponse ',
+            Payload: JSON.stringify(roomSyncPayload),
+          })
+          .promise()
+          .catch((err) => {
+            console.log(err);
+          });
       });
     }
 
-    return null;
+    return result;
   }
 
-  @Get('rs')
-  async roomSync() {
+  async roomSync({
+    fromDate = '2021-01-01',
+    toDate = '2021-06-30',
+    roomId = 9,
+  }: roomSyncEvent) {
     const redisClient = redis.createClient({
       host: process.env.REDIS_HOST,
       port: +process.env.REDIS_PORT,
       password: process.env.REDIS_PASSWORD,
     });
     // const fromDate = '2021-04-01T15:00:00Z';
-    const fromDate = '2021-01-01';
     // const toDate = '2021-06-30T15:00:00Z';
-    const toDate = '2021-06-30';
-    const roomId = 9;
-    // 방에 포함된 모든 유저 데이터를 가져오고 ,
 
+    // 방에 포함된 모든 유저 데이터를 가져오고 ,
     const foundRoom = await this.rooms.findOne(roomId, {
       relations: ['participants'], //'participants.userDayStats'
     });
@@ -197,7 +228,7 @@ export class LambdaService {
     const requestUserSync: User[] = await Promise.all(
       nowNotInRedisList.map((userId) => {
         redisClient.set('us' + userId, '1');
-        return this.userSync();
+        return this.userSync({ userId }); // TODO Lambdo Invoke
       }),
     );
     //  TASK A가 끝나고 나서, Redis를 다시 체크해서 아직 안 끝났다면 직접 UserSync .
@@ -222,7 +253,7 @@ export class LambdaService {
 
     await Promise.all(
       maybeFailedList.map((id) => {
-        return this.roomSync();
+        // return this.roomSync();
       }),
     );
 
@@ -284,14 +315,14 @@ export class LambdaService {
     // 완료되면 SQS Finish 요청을 보냄.
   }
 
-  @All('us')
-  async userSync() {
+  async userSync({
+    fromDate = '2021-04-01T15:00:00Z',
+    toDate = '2021-06-30T15:00:00Z',
+    userId = 68348070,
+  }: userSyncEvent) {
     const accessToken = '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';
-    const userId: number = +'68348070';
     const endpoint = 'https://api.github.com/graphql';
 
-    const fromDate = '2021-04-01T15:00:00Z';
-    const toDate = '2021-06-30T15:00:00Z';
     const first = 10;
 
     // const redisClient = redis.createClient({

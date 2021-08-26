@@ -1,21 +1,18 @@
+import { roomSyncEvent } from 'apps/sls-lambda/src/roomSync/type';
 import { Callback, Context, Handler } from 'aws-lambda';
 
 export const roomSync: Handler = async (
-  event: any,
+  event: roomSyncEvent,
   context: Context,
   callback: Callback,
 ) => {
-  console.log(event);
-  console.log(context);
-  console.log(process.env);
-
   // const appContext = await NestFactory.createApplicationContext(
   //   SlUserSyncModule,
   // );
 
   // const appService = appContext.get(SlUserSyncService);
   // const user = await appService.getHello();
-  console.log(event.test);
+  console.log(event.ReceiptHandle);
   console.log('room sync!');
-  return Promise.resolve('ok');
+  callback(null, JSON.stringify({ ok: 'ok' }));
 };
