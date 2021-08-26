@@ -9,8 +9,7 @@ import {
 } from '@lib/entity';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { SlUserSyncController } from './sl-user-sync.controller';
-import { SlUserSyncService } from './sl-user-sync.service';
+import { LambdaService } from './lambda.service';
 
 @Module({
   imports: [
@@ -41,7 +40,7 @@ import { SlUserSyncService } from './sl-user-sync.service';
       RoomDayStats,
     ]),
   ],
-  controllers: [SlUserSyncController],
-  providers: [SlUserSyncService],
+  controllers: [],
+  providers: [LambdaService],
 })
-export class SlUserSyncModule {}
+export class LambdaModule {}

@@ -22,12 +22,13 @@ import * as redis from 'redis';
 import { Repository } from 'typeorm';
 import { promisify } from 'util';
 import { getSdk, SdkFunctionWrapper } from './gql_codegen/gh_gql_type';
+import { dateToMysqlFormatString, splitArrayByNumber } from './utils';
 
 const lambdaVar = {
   user: 'aio39',
 };
 
-const REGION = 'ap-northeast-2';
+const REGION = process.env.REGION;
 const QUEUE_NAME = 'gitmoa_update_room_queue';
 const QUERY_URL =
   'https://sqs.ap-northeast-2.amazonaws.com/324744157557/gitmoa_update_room_queue';
@@ -39,22 +40,8 @@ interface roomMessage extends SendMessageBatchRequestEntry {
   MessageAttributes: roomMessageAttribute;
 }
 
-const dateToMysqlFormatString = (date: Date = new Date()): string => {
-  return dayjs(date).format('YYYY-MM-DD HH:mm:ss');
-};
-
-const splitArrayByNumber = <T>(array: T[], num: number) => {
-  let i;
-  const j = array.length;
-  const result = [];
-  for (i = 0; i < j; i += num) {
-    result.push(array.slice(i, i + num));
-  }
-  return result;
-};
-
 @Injectable()
-export class SlUserSyncService {
+export class LambdaService {
   constructor(
     @InjectRepository(User) private readonly users: Repository<User>,
     @InjectRepository(UserContribution)

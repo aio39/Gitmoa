@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core';
-import { SlUserSyncModule } from 'apps/sls-lambda/src/sl-user-sync.module';
-import { SlUserSyncService } from 'apps/sls-lambda/src/sl-user-sync.service';
+import { LambdaModule } from 'apps/sls-lambda/src/lambda.module';
+import { LambdaService } from 'apps/sls-lambda/src/lambda.service';
 import { Callback, Context, Handler } from 'aws-lambda';
 
 export const testHandler: Handler = async (
@@ -12,10 +12,8 @@ export const testHandler: Handler = async (
   console.log(context);
   console.log(process.env);
 
-  const appContext = await NestFactory.createApplicationContext(
-    SlUserSyncModule,
-  );
-  const appService = appContext.get(SlUserSyncService);
+  const appContext = await NestFactory.createApplicationContext(LambdaModule);
+  const appService = appContext.get(LambdaService);
   try {
     const user = await appService.getHello();
   } catch (error) {
