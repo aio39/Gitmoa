@@ -452,7 +452,7 @@ export class SlUserSyncService {
       }),
     );
 
-    const userDayStats: { [key: string]: UserDayStats } = {};
+    const userDayStats: { [key: string]: Omit<UserDayStats, 'User'> } = {};
 
     const CBInstances: UserContribution[] = [
       ...FlatFilteredPullRequestCB,
@@ -463,12 +463,12 @@ export class SlUserSyncService {
 
       if (!userDayStats.hasOwnProperty(date)) {
         userDayStats[date] = {
-          User: foundUser,
           total: 0,
           date,
           commit: 0,
           pullRequest: 0,
           issue: 0,
+          fk_user_id: foundUser.id,
         };
       }
 

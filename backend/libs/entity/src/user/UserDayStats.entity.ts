@@ -1,14 +1,7 @@
-import { CoreEntity } from '@lib/entity/core.entity';
 import { EntityName } from '@lib/entity/EntityName';
 import { User } from '@lib/entity/user/User.entity';
 import { Field, InputType, Int, ObjectType } from '@nestjs/graphql';
-import {
-  Column,
-  Entity,
-  JoinColumn,
-  ManyToOne,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
 
 @InputType(`${EntityName.UserDayStats}Input`, { isAbstract: true })
 @Entity({ name: EntityName.UserDayStats })
@@ -18,6 +11,10 @@ export class UserDayStats {
   @ManyToOne(() => User, { primary: true })
   @JoinColumn({ name: 'fk_user_id' })
   User: User;
+
+  @Column('int')
+  @Field(() => Number, { description: 'fk user id' })
+  fk_user_id: number;
 
   @Field(() => String)
   @Column('date', { primary: true })
