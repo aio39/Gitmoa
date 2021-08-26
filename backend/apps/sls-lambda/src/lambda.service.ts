@@ -14,7 +14,7 @@ import {
   UserContribution,
   UserDayStats,
 } from '@lib/entity';
-import { All, Get, Injectable } from '@nestjs/common';
+import { All, Get, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as dayjs from 'dayjs';
 import { GraphQLClient } from 'graphql-request';
@@ -51,6 +51,9 @@ export class LambdaService {
     @InjectRepository(Room)
     private readonly rooms: Repository<Room>,
   ) {}
+
+  private readonly logger = new Logger('gitmoa-lambda', { timestamp: true });
+
   getHello(): Promise<User> {
     return this.users.findOne(12341234);
   }
@@ -59,22 +62,22 @@ export class LambdaService {
     const MAX_BATCH = 2;
     const FROM_BEFORE_HOUR = 36;
     const PASSING_MINUETS = 30;
-
     const dj = dayjs();
-    const dj_hour = dj.get('hour') + (dj.get('minute') >= 30 ? 1 : 0);
-    const execTimeISO = dj.set('hour', dj_hour).toISOString();
+    const roundedHour = dj.get('hour') + (dj.get('minute') >= 30 ? 1 : 0);
+
+    const execTimeISO = dj.set('hour', roundedHour).toISOString();
     const fromTimeISO = dj.subtract(FROM_BEFORE_HOUR, 'hour').toISOString();
-    const before30mTimeISO = dayjs().subtract(30, 'minute').toISOString();
+    const before30mFromNowISO = dayjs().subtract(30, 'minute').toISOString();
 
     const rooms = await this.rooms
       .createQueryBuilder('r')
-      .where('IFNULL(r.lastSyncedAt,0) < :time', { time: before30mTimeISO })
+      .where('IFNULL(r.lastSyncedAt,0) < :time', { time: before30mFromNowISO })
       .getMany();
 
     const splitRooms = splitArrayByNumber(rooms, MAX_BATCH);
 
     const sqsClient = new SQSClient({ region: REGION });
-    const results = await Promise.all(
+    const sqsLoadRequests = await Promise.all(
       splitRooms.map((roomsChuck) => {
         const messageList: SendMessageBatchRequestEntry[] = roomsChuck.map(
           (room): roomMessage => ({
@@ -104,10 +107,13 @@ export class LambdaService {
         return sqsClient.send(new SendMessageBatchCommand(params));
       }),
     );
-    const re = results.map((result) => {
+    const resultHttpStatus = sqsLoadRequests.map((result) => {
+      this.logger.debug(`${result?.Failed?.[0].SenderFault} `);
+      this.logger.debug(`${result?.Successful?.[0].MessageId} `);
       return result.$metadata.httpStatusCode;
     });
-    return re;
+
+    return resultHttpStatus;
   }
 
   @Get('rqc') // 5분 마다 sqs에 업데이트 해야할 방 있는 지 확인해서, 룸 싱크 함수를 실행

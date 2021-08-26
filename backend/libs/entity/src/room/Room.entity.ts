@@ -21,6 +21,8 @@ import { CoreEntity } from '../core.entity';
 import { User } from '../user/User.entity';
 import { Tag } from './tag.entity';
 
+export type roomProperty = keyof Room;
+
 @InputType('RoomInputType', { isAbstract: true })
 @Entity({ name: 'room' })
 @ObjectType()

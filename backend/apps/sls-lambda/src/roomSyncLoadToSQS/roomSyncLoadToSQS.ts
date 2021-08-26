@@ -1,21 +1,24 @@
 import { NestFactory } from '@nestjs/core';
 import { LambdaModule } from 'apps/sls-lambda/src/lambda.module';
 import { LambdaService } from 'apps/sls-lambda/src/lambda.service';
-import {
-  roomSyncLoadToSQSEvent,
-  roomSyncLoadToSQSResult,
-} from 'apps/sls-lambda/src/roomSyncLoadToSQS/type';
-import { Context, Handler } from 'aws-lambda';
+import { roomSyncLoadToSQSEvent } from 'apps/sls-lambda/src/roomSyncLoadToSQS/type';
+import { loggingLevel } from 'apps/sls-lambda/src/utils';
+import { Callback, Context, Handler } from 'aws-lambda';
 
-export const roomSyncLoadToSQS: Handler<
-  roomSyncLoadToSQSEvent,
-  roomSyncLoadToSQSResult
-> = async (event, context: Context) => {
+export const roomSyncLoadToSQS: Handler<roomSyncLoadToSQSEvent> = async (
+  // roomSyncLoadToSQSResult
+  event,
+  context: Context,
+  callback: Callback,
+) => {
   console.log(event);
 
-  const appContext = await NestFactory.createApplicationContext(LambdaModule);
-  const appService = appContext.get(LambdaService);
-  const result = await appService.roomSyncLoadToSQS();
+  const app = await NestFactory.createApplicationContext(LambdaModule, {
+    logger: loggingLevel(process.env.NODE_ENV),
+  });
+  const lambdaService = app.get(LambdaService);
+  const result = await lambdaService.roomSyncLoadToSQS();
+  console.log(result);
 
-  return result;
+  callback(null, JSON.stringify({ result }));
 };
