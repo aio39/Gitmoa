@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core';
-import { SlUserSyncModule } from 'apps/sl-user-sync/src/sl-user-sync.module';
-import { SlUserSyncService } from 'apps/sl-user-sync/src/sl-user-sync.service';
+import { SlUserSyncModule } from 'apps/sls-lambda/src/sl-user-sync.module';
+import { SlUserSyncService } from 'apps/sls-lambda/src/sl-user-sync.service';
 import { Callback, Context, Handler } from 'aws-lambda';
 
 export const userSync: Handler = async (

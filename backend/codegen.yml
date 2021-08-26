@@ -4,9 +4,9 @@ schema:
       headers:
         Authorization: 'Bearer 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'
 documents:
-  - './apps/sl-user-sync/src/gql/*.gql.ts'
+  - './apps/sls-lambda/src/gql/*.gql.ts'
 generates:
-  apps/sl-user-sync/src/gql_codegen/gh_gql_type.ts:
+  apps/sls-lambda/src/gql_codegen/gh_gql_type.ts:
     plugins:
       - 'typescript'
       - 'typescript-operations'

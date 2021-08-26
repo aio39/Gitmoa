@@ -1,5 +1,7 @@
 import type { Serverless } from 'serverless/aws';
-import sls_fn_names from './apps/sl-user-sync/src/sls_const';
+import sls_fn_names from './apps/sls-lambda/src/sls_const';
+
+const sls_lambda_path = 'dist/apps/sls-lambda';
 
 const serverlessConfiguration: Serverless = {
   app: 'gitmoa',
@@ -44,12 +46,12 @@ const serverlessConfiguration: Serverless = {
     individually: false,
     excludeDevDependencies: false, // webpack에서 tree shaking 했으니 false
     exclude: ['**/*', 'node_modules/**'],
-    include: ['dist/apps/sl-user-sync/**'],
+    include: ['dist/apps/sls-lambda/**'],
   },
   functions: {
     test: {
       name: sls_fn_names.TEST_HANDLER, // name에 공백 들어가면 안 됨.
-      handler: 'dist/apps/sl-user-sync/main.testHandler',
+      handler: 'dist/apps/sls-lambda/main.testHandler',
       description: '테스트용 함수',
       events: [
         {
@@ -61,7 +63,7 @@ const serverlessConfiguration: Serverless = {
       ],
     },
     rs: {
-      handler: 'dist/apps/sl-user-sync/main.roomSync',
+      handler: 'dist/apps/sls-lambda/main.roomSync',
       name: sls_fn_names.ROOM_SYNC,
       events: [
         {
@@ -73,7 +75,7 @@ const serverlessConfiguration: Serverless = {
       ],
     },
     rsls: {
-      handler: 'dist/apps/sl-user-sync/main.roomSyncLoadToSQS',
+      handler: 'dist/apps/sls-lambda/main.roomSyncLoadToSQS',
       name: sls_fn_names.ROOM_SYNC_LOAD_TO_SQS,
       events: [
         {
@@ -90,7 +92,7 @@ const serverlessConfiguration: Serverless = {
       ],
     },
     rssc: {
-      handler: 'dist/apps/sl-user-sync/main.roomSyncConsumer',
+      handler: 'dist/apps/sls-lambda/main.roomSyncConsumer',
       name: sls_fn_names.ROOM_SYNC_CONSUMER,
       events: [
         {
@@ -107,7 +109,7 @@ const serverlessConfiguration: Serverless = {
       ],
     },
     us: {
-      handler: 'dist/apps/sl-user-sync/main.userSync',
+      handler: 'dist/apps/sls-lambda/main.userSync',
       name: sls_fn_names.USER_SYNC,
       events: [
         {

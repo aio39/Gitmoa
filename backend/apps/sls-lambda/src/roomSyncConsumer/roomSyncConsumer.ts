@@ -1,4 +1,4 @@
-import sls_fn_names from 'apps/sl-user-sync/src/sls_const';
+import sls_fn_names from 'apps/sls-lambda/src/sls_const';
 import { Callback, Context, Handler } from 'aws-lambda';
 import { Lambda } from 'aws-sdk';
 

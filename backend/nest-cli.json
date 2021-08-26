@@ -23,15 +23,15 @@
         "webpack": true
       }
     },
-    "sl-user-sync": {
+    "sls-lambda": {
       "type": "application",
-      "root": "apps/sl-user-sync",
+      "root": "apps/sls-lambda",
       "entryFile": "main",
-      "sourceRoot": "apps/sl-user-sync/src",
+      "sourceRoot": "apps/sls-lambda/src",
       "compilerOptions": {
-        "tsConfigPath": "apps/sl-user-sync/tsconfig.app.json",
-        "webpackConfigPath" :"apps/sl-user-sync/webpack.config.js",
-        "webpack":true
+        "tsConfigPath": "apps/sls-lambda/tsconfig.app.json",
+        "webpackConfigPath": "apps/sls-lambda/webpack.config.js",
+        "webpack": true
       }
     },
     "entity": {
