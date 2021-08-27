@@ -1,4 +1,6 @@
 import {
+  DeleteMessageCommand,
+  DeleteMessageCommandInput,
   ReceiveMessageCommand,
   SendMessageBatchCommand,
   SendMessageBatchCommandInput,
@@ -28,6 +30,7 @@ import { getSdk, SdkFunctionWrapper } from './gql_codegen/gh_gql_type';
 import { roomMessage, roomMessageAttribute } from './roomSyncLoadToSQS/type';
 import {
   dateToMysqlFormatString,
+  genRedisUserSyncKey,
   rmUndefinedFields,
   splitArrayByNumber,
 } from './utils';
@@ -178,12 +181,22 @@ export class LambdaService {
     fromDate = '2021-01-01',
     toDate = '2021-06-30',
     roomId = 9,
+    ReceiptHandle,
   }: roomSyncEvent) {
     const redisClient = redis.createClient({
       host: process.env.REDIS_HOST,
       port: +process.env.REDIS_PORT,
       password: process.env.REDIS_PASSWORD,
     });
+
+    const lambda = new Lambda({
+      ...(process.env.NODE_ENV === 'dev'
+        ? {
+            endpoint: 'http://localhost:3002',
+          }
+        : {}),
+    });
+
     // const fromDate = '2021-04-01T15:00:00Z';
     // const toDate = '2021-06-30T15:00:00Z';
 
@@ -191,69 +204,79 @@ export class LambdaService {
     const foundRoom = await this.rooms.findOne(roomId, {
       relations: ['participants'], //'participants.userDayStats'
     });
-    const updatedUserList: User[] = [];
-    const notUpdatedUserList: User[] = [];
-    // 최근 1시간내에 업데이트 되지 않은 리스트 A를 추려와서
+
+    // 최근 1시간내에 업데이트 된 유저인지 구별한다.
+    const updatedUserList: User[] = []; // A리스트 - 동기화 요청 안 해도 됨.
+    const notUpdatedUserList: User[] = []; // B 리스트 - 추가 동기화가 필요함.
     foundRoom.participants.forEach((user) => {
       const isUpdatedInLast1H = dayjs(user.lastSyncedAt).isAfter(
         dayjs().subtract(1, 'day'),
       );
-      if (isUpdatedInLast1H) {
-        updatedUserList.push(user);
-      } else {
-        notUpdatedUserList.push(user);
-      }
+      isUpdatedInLast1H
+        ? updatedUserList.push(user)
+        : notUpdatedUserList.push(user);
     });
-    // redis를 체크해서 이미 동기화 요청이 들어왔는지 확인하고
-    //  안 하고 있다면 요청을 보내서 데이터를 받아옴 / await TASK A
+
+    // redis를 체크해서 이미 동기화 요청이 들어왔는지 확인
     type UserId = User['id'];
-    const nowInRedisList: UserId[] = [];
-    const nowNotInRedisList: UserId[] = [];
-    console.time('all a');
+    const nowInRedisList: UserId[] = []; // B1 리스트 - 다른 roomSync에서 이미 요청 중이므로 기달림.
+    const nowNotInRedisList: UserId[] = []; // B2 리스트 -- 지금 바로 userSync 요청
+
     await Promise.all(
-      notUpdatedUserList.map((user): Promise<boolean> => {
-        return promisify(redisClient.exists).bind(redisClient)('us' + user.id);
-      }),
-    ).then((results) => {
-      results.forEach((isExist, idx) => {
-        const user = notUpdatedUserList[idx];
-        if (isExist) {
-          nowInRedisList.push(user.id);
-        } else {
-          nowNotInRedisList.push(user.id);
-        }
-      });
-    });
-    console.timeEnd('all a');
-    const requestUserSync: User[] = await Promise.all(
-      nowNotInRedisList.map((userId) => {
-        redisClient.set('us' + userId, '1');
-        return this.userSync({ userId }); // TODO Lambdo Invoke
+      notUpdatedUserList.map(async (user): Promise<void> => {
+        const isExists = await promisify(redisClient.exists).bind(redisClient)(
+          'us' + user.id,
+        );
+        isExists
+          ? nowInRedisList.push(user.id)
+          : nowNotInRedisList.push(user.id);
       }),
     );
-    //  TASK A가 끝나고 나서, Redis를 다시 체크해서 아직 안 끝났다면 직접 UserSync .
+
+    // B2 리스트 user sync
+    await Promise.all(
+      nowNotInRedisList.map((userId) => {
+        redisClient.set(genRedisUserSyncKey(userId), ''); // userSync가 시작되기 전에 redis에 올리기
+
+        return lambda
+          .invoke({
+            FunctionName: sls_fn_names.USER_SYNC,
+            InvocationType: 'RequestResponse ',
+            Payload: JSON.stringify({ userId, fromDate, toDate }),
+          })
+          .promise();
+        // TODO undefined 핸들링
+      }),
+    );
+
+    //  B2가 끝나고 나서, Redis를 다시 체크해서 아직 안 끝났다면 직접 UserSync .
     const finishedRedisList: UserId[] = [];
     const maybeFailedList: UserId[] = [];
 
-    console.time('all b');
     await Promise.all(
-      nowNotInRedisList.map(async (id) => {
-        const isExist = await redisClient.exists('us' + id);
+      nowInRedisList.map(async (userId) => {
+        const isExist = await redisClient.exists(genRedisUserSyncKey(userId));
         if (isExist) {
-          // 아직도 안 끝날걸 보아 sync 에러가 생긴거 같으니 직접 sync 요청
-          maybeFailedList.push(id);
+          // 아직도 안 끝날걸 보아 다른 sync 에서 에러가 생긴거 같으니 직접 sync 요청
+          maybeFailedList.push(userId);
         } else {
           // 다른 곳에서 신청한 sync가 끝났으니 db에서 가져온다청
-          // finishedRedisList.push(id);
+          finishedRedisList.push(userId);
         }
         return;
       }),
     );
-    console.timeEnd('all b');
 
     await Promise.all(
-      maybeFailedList.map((id) => {
-        // return this.roomSync();
+      maybeFailedList.map((userId) => {
+        return lambda
+          .invoke({
+            FunctionName: sls_fn_names.USER_SYNC,
+            InvocationType: 'RequestResponse ',
+            Payload: JSON.stringify({ userId, fromDate, toDate }),
+          })
+          .promise();
+        // return this.userSync({ userId, fromDate, toDate });
       }),
     );
 
@@ -263,7 +286,7 @@ export class LambdaService {
       RoomDayStats,
       'date' | 'total' | 'commit' | 'issue' | 'pullRequest' | 'isAllCommit'
     >;
-    const dayStats: DayStatus[] = await this.userDayStats
+    const dayStatsResult: DayStatus[] = await this.userDayStats
       .createQueryBuilder('stats')
       .select([
         'stats.date as date',
@@ -272,22 +295,22 @@ export class LambdaService {
         'sum(stats.pullRequest) as pullRequest',
         'sum(stats.issue) as issue',
       ])
-      // .where('stats.fk_user_id in :user_list', { user_list: userList })
-      // .where('stats.date BETWEEN :from AND :to  ', {
-      //   from: fromDate,
-      //   to: toDate,
-      // })
+      .where('stats.fk_user_id in :user_list', { user_list: userList })
+      .where('stats.date BETWEEN :from AND :to  ', {
+        from: fromDate,
+        to: toDate,
+      }) // NOTE 여기서 에러 ?
       .groupBy('date')
       .getRawMany();
 
-    const roomDayStatsInstance = dayStats.map((day, idx) => {
+    const roomDayStatsInstance = dayStatsResult.map((day, idx) => {
       // TODO 으어어 이거 나중에 사람 늘어나는거 어떻게 처리?
-      const newRD = new RoomDayStats();
-      newRD.isAllCommit = day.total === foundRoom.participants.length;
-      newRD.date_room_id = day.date + '-' + foundRoom.id;
-      Object.assign(newRD, day);
-      return newRD;
-      // return day;
+      // 방 가입일 컬럼을 만들어줘서 filter해주고 ...
+      const roomDayStats = new RoomDayStats();
+      roomDayStats.isAllCommit = day.total === foundRoom.participants.length;
+      roomDayStats.date_room_id = day.date + '-' + foundRoom.id;
+      Object.assign(roomDayStats, day);
+      return roomDayStats;
     });
 
     foundRoom.RoomDayStats = roomDayStatsInstance;
@@ -298,21 +321,22 @@ export class LambdaService {
     // } catch (error) {
     //   console.log(error);
     // }
-    try {
-      await this.rooms.save(foundRoom);
-    } catch (error) {
-      console.log(error);
-    }
+    const result2 = await this.rooms.save(foundRoom).catch((err) => {
+      console.log('room save error', err);
+    });
 
-    // console.log(result);
+    console.log(result2);
     // await this.rooms.findOne(roomId, {
     //   relations: ['participants'],
     //   where: { 'participants.id': In(maybeFailedList) },
     // });
 
-    // DB에 저장하기
+    const deleteParams: DeleteMessageCommandInput = {
+      QueueUrl: ROOM_QUERY_URL,
+      ReceiptHandle: ReceiptHandle,
+    };
 
-    // 완료되면 SQS Finish 요청을 보냄.
+    this.sqsClient.send(new DeleteMessageCommand(deleteParams));
   }
 
   async userSync({

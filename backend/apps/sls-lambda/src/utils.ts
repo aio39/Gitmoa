@@ -1,3 +1,4 @@
+import { User } from '@lib/entity';
 import { LogLevel } from '@nestjs/common';
 import * as dayjs from 'dayjs';
 
@@ -24,3 +25,5 @@ export const rmUndefinedFields = <T>(obj: T) => {
   Object.keys(obj).forEach((key) => obj[key] === undefined && delete obj[key]);
   return obj;
 };
+
+export const genRedisUserSyncKey = (userId: User['id']) => `us${userId}`;
