@@ -20,14 +20,5 @@ export const roomSyncConsumer: Handler<TEvent, TResult> = async (
   const appService = appContext.get(LambdaService);
   const result = await appService.roomSyncConsumer();
 
-  // const lambdaConfig: any = {};
-  // if (process.env.NODE_ENV === 'dev') {
-  //   lambdaConfig.endpoint = 'http://localhost:3002'; // NOTE 3002번 포트,
-  // }
-  // const lambda = new Lambda({
-  //   ...lambdaConfig,
-  // });
-
-  // callback(null, JSON.stringify(result));
   callback(null, JSON.stringify({ result }));
 };

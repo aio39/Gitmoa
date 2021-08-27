@@ -3,6 +3,24 @@ import sls_fn_names from './apps/sls-lambda/src/sls_const';
 
 const sls_lambda_path = 'dist/apps/sls-lambda';
 
+const templateGenerator = (list: string[]): string => {
+  const obj: { [key: string]: string } = {};
+  list.forEach((p) => {
+    obj[p] =
+      // prettier-ignore
+      "$util.escapeJavaScript($input.json('$." +
+      p +
+      // prettier-ignore
+      "'))." +
+      // prettier-ignore
+      "replaceAll('\\\\\"','\"')";
+  });
+
+  return JSON.stringify(obj);
+};
+
+console.log(templateGenerator(['roomId', 'toDate']));
+
 const serverlessConfiguration: Serverless = {
   app: 'gitmoa',
   service: {
@@ -68,8 +86,16 @@ const serverlessConfiguration: Serverless = {
       events: [
         {
           http: {
-            method: 'ANY',
+            method: 'POST',
             path: '/' + sls_fn_names.ROOM_SYNC,
+            integration: 'lambda',
+            request: {
+              // https://docs.aws.amazon.com/ko_kr/apigateway/latest/developerguide/api-gateway-mapping-template-reference.html#util-template-reference
+              template: {
+                'application/json': templateGenerator(['roomId', 'toDate']),
+                // 'application/json': '{ "" : "$context.httpMethod" }',
+              },
+            },
           },
         },
       ],
